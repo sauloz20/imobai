@@ -1,0 +1,13 @@
+﻿codigo,tipo,tituloAnuncio,cidade,bairro,areaM2,quartos,banheiros,vagas,valorVenda,valorAluguel,aceitaPets,varanda,ensolarado,descricaoTecnica
+IMB-001,Casa,Casa familiar no Centro,Montes Claros,Centro,180,3,2,2,450000,,true,true,true,Casa ampla próxima ao comércio e serviços
+IMB-002,Apartamento,Apartamento com varanda no Ibituruna,Montes Claros,Ibituruna,95,3,2,2,520000,,true,true,true,Apartamento iluminado em região valorizada
+IMB-003,Casa,Casa com quintal no Maracanã,Montes Claros,Maracanã,210,4,3,3,680000,,true,true,false,Casa espaçosa com quintal e área para família
+IMB-004,Apartamento,Apartamento compacto no Major Prates,Montes Claros,Major Prates,70,2,1,1,320000,,false,true,false,Apartamento próximo a supermercados e farmácias
+IMB-005,Casa,Casa térrea na Vila Guilhermina,Montes Claros,Vila Guilhermina,150,3,2,2,390000,,true,false,true,Casa térrea com garagem e boa iluminação
+IMB-006,Apartamento,Apartamento moderno no Todos os Santos,Montes Claros,Todos os Santos,110,3,2,2,610000,,true,true,true,Apartamento moderno próximo a escolas e restaurantes
+IMB-007,Casa,Casa para alugar no São José,Montes Claros,São José,140,3,2,2,,2200,true,true,false,Casa disponível para aluguel em área residencial
+IMB-008,Apartamento,Apartamento para alugar no Centro,Montes Claros,Centro,75,2,1,1,,1800,true,true,true,Apartamento prático com acesso ao comércio central
+IMB-009,Casa,Casa econômica na Independência,Montes Claros,Independência,120,2,1,1,280000,,true,false,false,Opção econômica para compra
+IMB-010,Apartamento,Apartamento para alugar no Cândida Câmara,Montes Claros,Cândida Câmara,85,2,2,1,,2400,true,true,true,Apartamento com varanda e boa ventilação
+IMB-011,Sobrado,Sobrado para venda no Jardim Panorama,Montes Claros,Jardim Panorama,200,4,3,2,750000,,true,true,true,Sobrado com área social ampla e duas vagas
+IMB-012,Kitnet,Kitnet para alugar no Renascença,Montes Claros,Renascença,38,1,1,1,,950,false,false,true,Kitnet compacta para uma pessoa ou casal

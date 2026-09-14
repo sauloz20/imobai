@@ -1,0 +1,410 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.8rem;
+  --background: #f5f7fb;
+  --foreground: #122033;
+  --card: #ffffff;
+  --card-foreground: #122033;
+  --popover: #ffffff;
+  --popover-foreground: #122033;
+  --primary: #10233f;
+  --primary-foreground: #ffffff;
+  --secondary: #eef3f8;
+  --secondary-foreground: #25415d;
+  --muted: #eef3f8;
+  --muted-foreground: #626e7c;
+  --accent: #fff6df;
+  --accent-foreground: #825d12;
+  --destructive: #d85b5b;
+  --destructive-foreground: #ffffff;
+  --border: #e4eaf1;
+  --input: #dce4ed;
+  --ring: #9bb9d4;
+  --chart-1: #4e789d;
+  --chart-2: #ffc857;
+  --chart-3: #6aa77f;
+  --chart-4: #8e80bd;
+  --chart-5: #d97d65;
+  --sidebar: #10233f;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffc857;
+  --sidebar-primary-foreground: #10233f;
+  --sidebar-accent: #1b3554;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: #ffc857;
+}
+
+* { border-color: var(--border); }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: var(--background); color: var(--foreground); font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
+h1, h2, h3, h4 { font-family: 'Manrope', 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.65; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+@layer components {
+  .container { width: 100%; margin-inline: auto; padding-inline: 1rem; }
+  .flex { min-height: 0; min-width: 0; }
+  @media (min-width: 640px) { .container { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .container { max-width: 1280px; padding-inline: 2rem; } }
+}
+
+/* ============================================================
+   ImobAI Premium Design Foundation
+   ============================================================ */
+
+:root {
+  --navy-950: #071426;
+  --navy-900: #0b1f3a;
+  --navy-800: #12345a;
+  --navy-700: #1c4a73;
+
+  --gold-500: #c99a3e;
+  --gold-400: #d9ad58;
+  --gold-300: #e7c984;
+  --gold-soft: #fff5df;
+
+  --ink-950: #102033;
+  --ink-800: #22364d;
+  --ink-700: #40536a;
+  --ink-500: #616e81;
+  --ink-400: #656e79;
+
+  --surface-0: #ffffff;
+  --surface-50: #f6f8fb;
+  --surface-100: #eef2f6;
+  --surface-200: #e4eaf1;
+
+  --line-subtle: rgba(16, 32, 51, 0.08);
+  --line-strong: #d8e1ea;
+
+  --success-premium: #2f8b61;
+  --warning-premium: #b97918;
+  --danger-premium: #b64b4b;
+
+  --shadow-card-premium:
+    0 18px 50px rgba(16, 32, 51, 0.07),
+    0 2px 8px rgba(16, 32, 51, 0.03);
+
+  --shadow-card-hover:
+    0 26px 70px rgba(16, 32, 51, 0.14),
+    0 6px 18px rgba(16, 32, 51, 0.06);
+
+  --shadow-modal-premium:
+    0 35px 100px rgba(7, 20, 38, 0.28);
+
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--surface-50);
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at 88% 0%,
+      rgba(201, 154, 62, 0.055),
+      transparent 28rem
+    ),
+    var(--surface-50);
+  color: var(--ink-950);
+  font-family: "DM Sans", sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Manrope", sans-serif;
+  letter-spacing: -0.035em;
+}
+
+::selection {
+  background: rgba(201, 154, 62, 0.22);
+  color: var(--navy-950);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(201, 154, 62, 0.65);
+  outline-offset: 3px;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    color 180ms var(--ease-premium),
+    background-color 180ms var(--ease-premium),
+    border-color 180ms var(--ease-premium),
+    box-shadow 180ms var(--ease-premium),
+    transform 180ms var(--ease-premium),
+    opacity 180ms var(--ease-premium);
+}
+
+.imobai-premium-surface {
+  border: 1px solid var(--line-subtle);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-card-premium);
+  backdrop-filter: blur(18px);
+}
+
+.imobai-premium-dark {
+  background:
+    radial-gradient(
+      circle at 80% 0%,
+      rgba(201, 154, 62, 0.18),
+      transparent 26rem
+    ),
+    linear-gradient(135deg, var(--navy-900), var(--navy-950));
+  color: white;
+}
+
+.imobai-gold-line {
+  position: relative;
+}
+
+.imobai-gold-line::after {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 42px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--gold-500);
+  content: "";
+}
+
+.imobai-card-hover {
+  transition:
+    transform 320ms var(--ease-premium),
+    box-shadow 320ms var(--ease-premium),
+    border-color 320ms var(--ease-premium);
+}
+
+.imobai-card-hover:hover {
+  border-color: rgba(201, 154, 62, 0.32);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-5px);
+}
+
+.imobai-image-hover {
+  overflow: hidden;
+}
+
+.imobai-image-hover img {
+  transition: transform 700ms var(--ease-premium);
+}
+
+.imobai-image-hover:hover img {
+  transform: scale(1.035);
+}
+
+.imobai-reveal {
+  animation: imobai-reveal 650ms var(--ease-premium) both;
+}
+
+.imobai-reveal-delay-1 {
+  animation-delay: 80ms;
+}
+
+.imobai-reveal-delay-2 {
+  animation-delay: 160ms;
+}
+
+.imobai-reveal-delay-3 {
+  animation-delay: 240ms;
+}
+
+.imobai-ai-pulse {
+  animation: imobai-ai-pulse 2.4s ease-in-out infinite;
+}
+
+.imobai-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.imobai-shimmer::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.32) 45%,
+    transparent 70%
+  );
+  content: "";
+  transform: translateX(-120%);
+  animation: imobai-shimmer 2.8s ease-in-out infinite;
+}
+
+@keyframes imobai-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes imobai-ai-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(201, 154, 62, 0.18);
+  }
+
+  50% {
+    box-shadow: 0 0 0 9px rgba(201, 154, 62, 0);
+  }
+}
+
+@keyframes imobai-shimmer {
+  0%,
+  35% {
+    transform: translateX(-120%);
+  }
+
+  70%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    background: var(--surface-50);
+  }
+
+  .imobai-card-hover:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Editorial real-estate layer — restrained, human, product-led
+   ============================================================ */
+
+.imobai-app-shell {
+  background: #f7f6f2;
+}
+
+.imobai-editorial-hero {
+  min-height: 470px;
+  background:
+    linear-gradient(90deg, rgba(15, 31, 48, 0.98) 0%, rgba(15, 31, 48, 0.94) 42%, rgba(15, 31, 48, 0.58) 67%, rgba(15, 31, 48, 0.16) 100%),
+    #102033;
+  box-shadow: 0 24px 60px rgba(16, 32, 51, 0.12);
+}
+
+.imobai-editorial-hero h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(3rem, 6vw, 5.25rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+}
+
+.imobai-editorial-panel {
+  border: 1px solid #e3e1db;
+  background: #fffefa;
+  box-shadow: 0 12px 32px rgba(25, 36, 48, 0.045);
+}
+
+.imobai-editorial-panel:hover {
+  border-color: #d8d3c7;
+}
+
+.imobai-card-hover {
+  box-shadow: 0 10px 30px rgba(20, 34, 48, 0.055);
+}
+
+.imobai-card-hover:hover {
+  box-shadow: 0 18px 44px rgba(20, 34, 48, 0.10);
+}
+
+/* Keep the interface quiet: decorative motion should never dominate the content. */
+.imobai-ai-pulse {
+  animation-duration: 3.4s;
+}
+
+@media (max-width: 1023px) {
+  .imobai-editorial-hero {
+    min-height: 0;
+    background: linear-gradient(135deg, #102033, #172e47);
+  }
+}
