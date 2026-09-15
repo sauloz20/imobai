@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -356,7 +356,7 @@ select {
 }
 
 /* ============================================================
-   Editorial real-estate layer — restrained, human, product-led
+   Editorial real-estate layer â€” restrained, human, product-led
    ============================================================ */
 
 .imobai-app-shell {
@@ -418,4 +418,72 @@ select {
   --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
+/* Esconde a barra de rolagem, mantendo a rolagem ativa */
+html, body { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* Base visual da Ã¡rea inferior do ImobAI */
+
+/* =========================================================
+   Microinterações globais — ImobAI
+   ========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+button:active,
+a:active {
+  transform: scale(0.98);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    outline-color 180ms ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.imobai-card-hover {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.imobai-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(47, 111, 159, 0.10);
+}
+
+::selection {
+  background: rgba(47, 111, 159, 0.18);
 }

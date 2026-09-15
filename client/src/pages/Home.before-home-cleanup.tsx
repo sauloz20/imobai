@@ -310,7 +310,7 @@ export default function Home() {
   };
 
   const propertyList = properties.data ?? [];
-  const featured = propertyList.slice(0, 12) as DetailProperty[];
+  const featured = (summary.data?.featured ?? propertyList.slice(0, 3)) as DetailProperty[];
   const allCatalog = (properties.data ?? []) as DetailProperty[];
 
   const validateRegistration = (values: { name: string; email: string; password: string }) => {
@@ -723,66 +723,277 @@ export default function Home() {
             </div>
           </div>
         </section>
-          {/* ================= Busca inteligente ================= */}          
-          {/* ================= Imóveis em destaque ================= */}
-          <section id="catalog" className="imobai-reveal mt-8 scroll-mt-24 px-1 sm:mt-12">
-            <div className="mx-auto max-w-[1240px]">
-              <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75">
-                    Seleção ImobAI
+          {/* ================= Busca inteligente ================= */}
+          <section id="advanced-search" className="imobai-reveal imobai-reveal-delay-1 mt-14 scroll-mt-24">
+            <div className="imobai-editorial-panel overflow-hidden rounded-[26px] p-5 sm:p-7">
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                <div className="flex items-center gap-3">
+                  <div className="imobai-ai-pulse flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#0b1f3a] text-[#d7b56a]"><Bot size={20} /></div>
+                  <div>
+                    <h2 className="text-[19px] font-semibold tracking-[-0.03em] text-[#102033]">Busca inteligente</h2>
+                    <p className="mt-0.5 text-[12.5px] text-[#616e81]">Escreva como vocÃƒÂª falaria com um corretor. A IA identifica finalidade, filtros e diferenciais.</p>
                   </div>
-                  <h2 className="mt-1 text-[28px] font-semibold tracking-[-0.045em] text-white drop-shadow-[0_2px_12px_rgba(20,61,87,0.18)] sm:text-[34px]">
-                    Imóveis em destaque
-                  </h2>
-                  <p className="mt-2 max-w-[560px] text-[13px] leading-6 text-white/85">
-                    Encontre casas, apartamentos e espaços selecionados para você.
-                  </p>
                 </div>
-
-                <a
-                  href="/catalogo"
-                  className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/95 px-4 py-2.5 text-[11px] font-semibold text-[#2f6f9f] shadow-[0_8px_24px_rgba(25,75,105,0.12)] transition hover:bg-white"
-                >
-                  Explorar catálogo
-                  <ArrowRight size={13} />
-                </a>
+                <div className="flex items-center gap-2 text-[11px] text-[#656e79]">
+                  <span className="rounded-full bg-[#eef8f1] px-2.5 py-1 font-semibold text-[#2f8b61]">Qwen conectado</span>
+                </div>
               </div>
 
-              {summary.isLoading || properties.isLoading ? (
-                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: 12 }).map((_, index) => (
-                    <ResultSkeleton key={index} />
-                  ))}
-                </div>
-              ) : featured.length ? (
-                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-                  {featured.map((property, index) => (
-                    <div
-                      key={property.id}
-                      className="imobai-reveal"
-                      style={{ animationDelay: `${index * 70}ms` }}
-                    >
-                      <PropertyCard
-                        property={{
-                          ...property,
-                          recommended: index === 0,
-                        }}
-                        onOpenDetails={() => openDetails(property)}
-                      />
+              <div className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+                <div>
+                  <div className="mb-2 flex items-center gap-1.5 text-[11px]">
+                    <span className="mr-1 text-[#656e79]">Finalidade:</span>
+                    {(["compra", "aluguel"] as const).map(option => (
+                      <button key={option} type="button" onClick={() => setFinalidadeOverride(current => (current === option ? null : option))} className={cn("rounded-full border px-3 py-1 font-semibold transition-colors", finalidadeOverride === option ? "border-[#c99a3e] bg-[#fffaf0] text-[#8a6110]" : "border-[#d8e1ea] bg-white text-[#6f7d8e] hover:border-[#c99a3e]/50")}>{option === "compra" ? "Comprar" : "Alugar"}</button>
+                    ))}
+                  </div>
+                  <div className="relative">
+                    <Textarea
+                      value={searchText}
+                      onChange={event => setSearchText(event.target.value)}
+                      onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); interpretSearch(); } }}
+                      className="min-h-[104px] resize-none rounded-[18px] border-[#dce4ed] bg-[#fbfcfe] px-4 py-3.5 text-[14px] leading-6 text-[#263950] shadow-none placeholder:text-[#a1adbb] focus-visible:ring-[#c99a3e]/40"
+                      placeholder="Ex.: quero uma casa atÃƒÂ© R$ 500 mil que aceite pets..."
+                      maxLength={240}
+                    />
+                    <div className="absolute bottom-3 right-3 text-[10px] text-[#a3adba]">{searchText.length}/240</div>
+                  </div>
+
+                  {/* SugestÃƒÂµes rÃƒÂ¡pidas Ã¢â‚¬â€ escrita natural */}
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {SEARCH_SUGGESTIONS.map(suggestion => (
+                      <button key={suggestion} type="button" onClick={() => setSearchText(suggestion)} className="rounded-full border border-[#e4eaf1] bg-white px-3 py-1.5 text-[11px] text-[#5a6b80] transition hover:border-[#c99a3e]/50 hover:bg-[#fffaf0] hover:text-[#8a6110]">
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="hidden items-center gap-2 text-[11px] text-[#656e79] sm:flex">
+                      <ShieldCheck size={14} className="text-[#2b6e9e]" /> Interpretado pelo agente Ã¢â‚¬â€ vocÃƒÂª revisa os filtros antes de ver resultados.
                     </div>
-                  ))}
+                    <StatefulButton onClick={interpretSearch} disabled={parseSearch.isPending} className="ml-auto h-11 rounded-xl bg-[#c99a3e] px-6 text-[13px] font-semibold text-[#071426] shadow-[0_10px_26px_rgba(201,154,62,0.3)] transition hover:bg-[#d9ad58]">
+                      {parseSearch.isPending ? (<><Loader2 className="animate-spin" size={15} /> Interpretando sua busca</>) : (<><Search size={15} /> Interpretar busca</>)}
+                    </StatefulButton>
+                  </div>
                 </div>
-              ) : (
-                <div className="rounded-[24px] border border-white/40 bg-white/15 p-10 text-center backdrop-blur-sm">
-                  <Building2 className="mx-auto text-white/80" size={28} />
-                  <p className="mt-3 text-[13px] text-white/80">
-                    Ainda não há imóveis disponíveis para destaque.
-                  </p>
+
+                {/* Leitura do agente */}
+                <div className="rounded-[20px] border border-[#e7ecf2] bg-[#f6f8fb] p-4 sm:p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#656e79]">Leitura do agente</span>
+                    {interpretation && <Badge className={cn("border-0 text-[10px] font-semibold", interpretation.source === "agent" ? "bg-[#e9f7ef] text-[#2f8b61]" : "bg-[#fff3d6] text-[#8a6110]")}>{interpretation.source === "agent" ? "IA conectada" : "Modo demo"}</Badge>}
+                  </div>
+                  {interpretation ? (
+                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      <ParseChip label="Finalidade" value={interpretation.finalidade === "aluguel" ? "Aluguel" : interpretation.finalidade === "compra" ? "Compra" : "Qualquer"} />
+                      <ParseChip label="Tipo" value={interpretation.tipo ?? "Qualquer"} />
+                      <ParseChip label="Cidade" value={interpretation.cidade ?? "Qualquer"} />
+                      <ParseChip label="Quartos" value={interpretation.quartos ? `${interpretation.quartos}+` : "Qualquer"} />
+                      <ParseChip label="Bairro" value={interpretation.bairro ?? "Qualquer"} />
+                      <ParseChip label="Faixa de valor" value={interpretation.valor_min || interpretation.valor_max ? `${interpretation.valor_min ? money(interpretation.valor_min, true) : "Sem piso"} Ã¢â‚¬â€œ ${interpretation.valor_max ? money(interpretation.valor_max, true) : "Sem teto"}` : "Sem limite"} />
+                      <ParseChip label="Pet friendly" value={interpretation.aceita_pets ? "Sim" : "Ã¢â‚¬â€"} icon={PawPrint} />
+                      <ParseChip label="Varanda" value={interpretation.varanda ? "Sim" : "Ã¢â‚¬â€"} icon={Building2} />
+                    </div>
+                  ) : (
+                    <div className="flex min-h-[112px] flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#a9b5c2] shadow-sm"><Bot size={18} /></div>
+                      <p className="text-[12px] leading-5 text-[#656e79]">Os filtros reconhecidos aparecem aqui<br />antes de consultar o catÃƒÂ¡logo.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Resultados da busca */}
+              {searchParams && (
+                <div className="mt-6 border-t border-[#eef2f6] pt-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-[14px] font-semibold text-[#102033]">{properties.isLoading ? "BuscandoÃ¢â‚¬Â¦" : `${propertyList.length} ${propertyList.length === 1 ? "imÃƒÂ³vel compatÃƒÂ­vel" : "imÃƒÂ³veis compatÃƒÂ­veis"}`}</h3>
+                      <p className="mt-0.5 text-[11.5px] text-[#656e79]">Ordenados por afinidade com a sua busca.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a href={`/catalogo${buildCatalogUrl(searchParams)}`} className="flex items-center gap-1 text-[12px] font-semibold text-[#8a6110] transition hover:text-[#c99a3e]">Abrir no catÃƒÂ¡logo <ArrowRight size={13} /></a>
+                      <button onClick={() => { setSearchParams(null); setInterpretation(null); }} className="text-[11.5px] font-medium text-[#6f8da8] transition hover:text-[#102033]">Limpar</button>
+                    </div>
+                  </div>
+                  {properties.isLoading ? (
+                    <div className="grid gap-3 md:grid-cols-3">{Array.from({ length: 3 }).map((_, index) => <ResultSkeleton key={index} />)}</div>
+                  ) : propertyList.length ? (
+                    <div className="grid gap-3 md:grid-cols-3">
+                      {propertyList.slice(0, 3).map(property => (
+                        <PropertyCard key={property.id} property={{ ...(property as DetailProperty), recommended: true }} layout="horizontal" className="max-md:flex-col" onOpenDetails={() => openDetails(property as DetailProperty)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center rounded-[20px] border border-dashed border-[#d8e1ea] bg-[#fbfcfe] p-6 text-center">
+                      <SearchX size={24} className="text-[#8a6110]" aria-hidden />
+                      <p className="mt-3 max-w-[460px] text-[12.5px] leading-5 text-[#5c6b7d]">
+                        {searchParams.cidade ? `Ainda nÃƒÂ£o temos imÃƒÂ³veis em ${searchParams.cidade}${searchParams.bairro ? `, no bairro ${searchParams.bairro}` : ""} com esses filtros.` : "Nenhum imÃƒÂ³vel bate com esses filtros no momento."} Tente ampliar a faixa de preÃƒÂ§o, remover diferenciais ou explorar outra regiÃƒÂ£o.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </section>
+
+          {/* ================= Faixa de confianÃƒÂ§a ================= */}
+          <section aria-label="Por que confiar no ImobAI" className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: ShieldCheck, title: "CatÃƒÂ¡logo verificado", text: "PreÃƒÂ§os e disponibilidade consistentes com o banco de dados." },
+              { icon: Bot, title: "IA que explica", text: "A busca mostra os critÃƒÂ©rios reconhecidos antes de filtrar." },
+              { icon: BadgeCheck, title: "NegociaÃƒÂ§ÃƒÂ£o protegida", text: "Converse com o anunciante sem expor seus dados." },
+              { icon: TrendingUp, title: "Leitura de mercado", text: "PreÃƒÂ§o mÃƒÂ©dio por mÃ‚Â² do bairro antes de vocÃƒÂª decidir." },
+            ].map(item => (
+              <div key={item.title} className="imobai-card-hover flex items-start gap-3 rounded-[18px] border border-[#e7ecf2] bg-white p-4 shadow-[var(--shadow-card-premium)]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f6f8fb] text-[#8a6110]"><item.icon size={17} /></div>
+                <div><div className="text-[13px] font-semibold text-[#102033]">{item.title}</div><p className="mt-1 text-[11.5px] leading-5 text-[#616e81]">{item.text}</p></div>
+              </div>
+            ))}
+          </section>{/* ================= Ferramentas de anÃƒÂºncio e preÃƒÂ§o ================= */}
+          <div className="mt-14 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <section id="ad-generator" className="scroll-mt-24 rounded-[24px] border border-white/80 bg-white/80 p-5 shadow-[0_12px_40px_rgba(47,111,159,0.08)] backdrop-blur-sm sm:p-6">
+              <SectionHeader icon={Tags} eyebrow="GERADOR_ANUNCIO" title="AnÃƒÂºncio pronto para publicar" description="Transforme atributos tÃƒÂ©cnicos em uma narrativa que vende." />
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <Field label="Tipo de imÃƒÂ³vel"><select value={adForm.tipo} onChange={event => setAdForm({ ...adForm, tipo: event.target.value })} className="h-10 w-full rounded-xl border border-[#dce4ed] bg-[#fbfcfe] px-3 text-[12px] text-[#2b3d53] outline-none focus:border-[#c99a3e]/60"><option>Apartamento</option><option>Casa</option><option>Sobrado</option><option>Cobertura</option><option>Terreno</option></select></Field>
+                <Field label="Quartos"><Input type="number" value={adForm.quartos} onChange={event => setAdForm({ ...adForm, quartos: Number(event.target.value) })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" /></Field>
+                <Field label="Bairro"><Input value={adForm.bairro} onChange={event => setAdForm({ ...adForm, bairro: event.target.value })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" /></Field>
+                <Field label="PreÃƒÂ§o de venda"><Input type="number" value={adForm.preco} onChange={event => setAdForm({ ...adForm, preco: Number(event.target.value) })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" /></Field>
+              </div>
+              <Field label="Diferenciais" className="mt-3"><Input value={adForm.diferenciais} onChange={event => setAdForm({ ...adForm, diferenciais: event.target.value })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" /></Field>
+              <StatefulButton onClick={() => generateAd.mutate({ ...adForm, diferenciais: adForm.diferenciais.split(",").map(item => item.trim()).filter(Boolean) })} disabled={generateAd.isPending} className="mt-4 rounded-xl border-[#cdd9e5] bg-white text-[12px] font-semibold text-[#2c5274] hover:bg-[#f5f9fc]">{generateAd.isPending ? <Loader2 className="mr-2 animate-spin" size={15} /> : <Sparkles className="mr-2" size={15} />} Gerar anÃƒÂºncio com IA</StatefulButton>
+              {adResult && <div className="mt-5 rounded-2xl border border-[#f2dfad] bg-[#fffaf0] p-4"><div className="flex items-start justify-between gap-4"><div><div className="text-[15px] font-semibold text-[#263a4f]">{adResult.titulo_comercial}</div><p className="mt-2 text-[12px] leading-5 text-[#6f7d8e]">{adResult.descricao_persuasiva}</p></div><Badge className="shrink-0 border-0 bg-[#fff0c5] text-[10px] text-[#9a7013]">{adResult.source === "agent" ? "IA" : "Demo"}</Badge></div><div className="mt-3 flex flex-wrap gap-1.5">{adResult.hashtags.map(tag => <span key={tag} className="rounded-full bg-white px-2 py-1 text-[10px] font-medium text-[#9a7013] shadow-sm">{tag}</span>)}</div></div>}
+            </section>
+            <section id="pricing" className="scroll-mt-24 rounded-[22px] border border-white/70 bg-white/75 p-5 text-[#29485d] shadow-[0_12px_40px_rgba(47,111,159,0.10)] backdrop-blur-sm sm:p-6">
+              <SectionHeader dark icon={CircleDollarSign} eyebrow="SUGESTAO_PRECO" title="PreÃƒÂ§o com contexto de mercado" description="Compare o mÃ‚Â² da regiÃƒÂ£o e ajuste pelos diferenciais do imÃƒÂ³vel." />
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <Field dark label="Bairro"><Input value={priceForm.bairro} onChange={event => setPriceForm({ ...priceForm, bairro: event.target.value })} className="h-10 rounded-xl border-white/10 bg-white/10 text-[12px] text-white placeholder:text-white/35" /></Field>
+                <Field dark label="ÃƒÂrea (mÃ‚Â²)"><Input type="number" value={priceForm.areaM2} onChange={event => setPriceForm({ ...priceForm, areaM2: Number(event.target.value) })} className="h-10 rounded-xl border-white/10 bg-white/10 text-[12px] text-white" /></Field>
+                <Field dark label="Tipo"><select value={priceForm.tipo} onChange={event => setPriceForm({ ...priceForm, tipo: event.target.value })} className="h-10 w-full rounded-xl border border-white/10 bg-white/10 px-3 text-[12px] text-white outline-none"><option className="text-[#0b1f3a]">Apartamento</option><option className="text-[#0b1f3a]">Casa</option><option className="text-[#0b1f3a]">Cobertura</option><option className="text-[#0b1f3a]">Sobrado</option></select></Field>
+                <Field dark label="Diferenciais"><Input value={priceForm.diferenciais} onChange={event => setPriceForm({ ...priceForm, diferenciais: event.target.value })} className="h-10 rounded-xl border-white/10 bg-white/10 text-[12px] text-white placeholder:text-white/35" /></Field>
+              </div>
+              <StatefulButton onClick={handleSuggestPrice} disabled={suggestPrice.isPending} className="mt-4 rounded-xl bg-[#c99a3e] text-[12px] font-semibold text-[#071426] hover:bg-[#d9ad58]">{suggestPrice.isPending ? <Loader2 className="mr-2 animate-spin" size={15} /> : <CircleDollarSign className="mr-2" size={15} />} Calcular sugestÃƒÂ£o</StatefulButton>
+              {priceResult && <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.07] p-4"><div className="flex items-end justify-between gap-3"><div><div className="text-[10px] uppercase tracking-[0.14em] text-white/45">Venda sugerida</div><div className="mt-1 text-[25px] font-semibold tracking-[-0.04em] text-[#d7b56a]">{money(priceResult.preco_sugerido_venda, true)}</div></div><div className="text-right"><div className="text-[10px] uppercase tracking-[0.14em] text-white/45">LocaÃƒÂ§ÃƒÂ£o</div><div className="mt-1 text-[15px] font-semibold text-white">{money(priceResult.preco_sugerido_aluguel)}/mÃƒÂªs</div></div></div><div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 text-[11px]"><div><span className="text-white/45">MÃƒÂ©dia regional</span><div className="mt-1 font-semibold text-white">{money(priceResult.media_m2)}/mÃ‚Â²</div></div><div><span className="text-white/45">Faixa recomendada</span><div className="mt-1 font-semibold text-white">{priceResult.faixa_recomendada}</div></div></div><p className="mt-3 text-[11px] leading-5 text-white/55">{priceResult.justificativa}</p></div>}
+            </section>
+          </div>
+
+          {/* ================= Mercado + performance ================= */}
+          <section className="mt-14 grid gap-6 xl:grid-cols-[1fr_0.8fr]">
+            <div className="rounded-[24px] border border-white/80 bg-white/80 p-5 shadow-[0_12px_40px_rgba(47,111,159,0.08)] backdrop-blur-sm sm:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#8a6110]">Leitura de mercado</div>
+                  <h2 className="text-[19px] font-semibold tracking-[-0.035em] text-[#102033]">PreÃƒÂ§o mÃƒÂ©dio por mÃ‚Â²</h2>
+                  <p className="mt-1 text-[12px] text-[#656e79]">Bairros com maior procura na base ativa.</p>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f6f8fb] text-[#2b6e9e]"><BarChart3 size={17} /></div>
+              </div>
+              <div className="mt-6 space-y-4">
+                {(summary.data?.neighborhoods ?? []).slice(0, 5).map((item, index) => <MarketBar key={item.bairro} label={item.bairro} value={item.priceM2} max={summary.data?.neighborhoods?.[0]?.priceM2 ?? item.priceM2} color={index === 0 ? "#0b1f3a" : index === 1 ? "#2b6e9e" : "#9ab1c5"} />)}
+              </div>
+            </div>
+            <div className="rounded-[22px] bg-[#eaf1f7] p-5 sm:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#5d7893]">Performance do agente</div>
+                  <h2 className="text-[19px] font-semibold tracking-[-0.035em] text-[#17314e]">Mais clareza, menos atrito.</h2>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#547b9c] shadow-sm"><Users size={17} /></div>
+              </div>
+              <div className="mt-6 flex items-end gap-3">
+                <div className="text-[42px] font-semibold tracking-[-0.07em] text-[#17314e]">86<span className="text-[20px] text-[#547b9c]">/100</span></div>
+                <div className="mb-2 rounded-full bg-[#d7eddf] px-2 py-1 text-[10px] font-bold text-[#398557]">+6,8%</div>
+              </div>
+              <p className="mt-2 max-w-[340px] text-[12px] leading-5 text-[#65809a]">ÃƒÂndice de afinidade mÃƒÂ©dio entre buscas interpretadas e imÃƒÂ³veis recomendados.</p>
+              <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/70"><div className="h-full w-[86%] rounded-full bg-[#2b6e9e]" /></div>
+              <div className="mt-2 flex justify-between text-[10px] text-[#7e97ac]"><span>RelevÃƒÂ¢ncia das recomendaÃƒÂ§ÃƒÂµes</span><span>86%</span></div>
+            </div>
+          </section>
+
+          {/* ================= Inbox + Concierge ================= */}
+          <section className="mt-14 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <div id="inbox" className="scroll-mt-24 rounded-[24px] border border-white/80 bg-white/80 p-5 shadow-[0_12px_40px_rgba(47,111,159,0.08)] backdrop-blur-sm sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#8a6110]">NegociaÃƒÂ§ÃƒÂ£o privada</div>
+                  <h2 className="text-[19px] font-semibold tracking-[-0.035em] text-[#102033]">Minhas conversas</h2>
+                  <p className="mt-1 text-[12px] text-[#656e79]">Fale diretamente com o proprietÃƒÂ¡rio ou interessado.</p>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f6f8fb] text-[#2b6e9e]"><MessageSquareText size={17} /></div>
+              </div>
+              {!auth.data ? (
+                <div className="mt-6 rounded-2xl bg-[#f6f8fb] p-5 text-center"><div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#6789a5] shadow-sm"><Users size={18} /></div><p className="mt-3 text-[12px] leading-5 text-[#7e8d9f]">Crie uma conta para negociar imÃƒÂ³veis e manter seu histÃƒÂ³rico de mensagens.</p><StatefulButton onClick={() => { setAuthMode("register"); setAuthOpen(true); }} className="mt-4 rounded-xl bg-[#0b1f3a] text-[12px]">Criar minha conta</StatefulButton></div>
+              ) : (
+                <div className="mt-5 grid gap-4 md:grid-cols-[0.75fr_1.25fr]">
+                  <div className="space-y-2">
+                    {(conversations.data ?? []).length ? (conversations.data ?? []).map(conversation => <button key={conversation.id} onClick={() => setSelectedConversation(conversation.id)} className={`w-full rounded-xl border p-3 text-left transition ${selectedConversation === conversation.id ? "border-[#c99a3e]/50 bg-[#fffaf0]" : "border-[#eef2f6] bg-white hover:bg-[#fafbfd]"}`}><div className="flex items-center justify-between"><span className="text-[12px] font-semibold text-[#33485f]">NegociaÃƒÂ§ÃƒÂ£o #{conversation.id}</span><span className="text-[10px] text-[#9ba8b5]">imÃƒÂ³vel</span></div><p className="mt-1 truncate text-[11px] text-[#8b99a8]">Conversa sobre anÃƒÂºncio</p></button>) : <div className="rounded-xl bg-[#f6f8fb] p-4 text-[11px] leading-5 text-[#8795a5]">Nenhuma conversa ainda. Abra uma negociaÃƒÂ§ÃƒÂ£o a partir de um anÃƒÂºncio de outro usuÃƒÂ¡rio.</div>}
+                  </div>
+                  <div className="flex min-h-[180px] flex-col rounded-2xl bg-[#f6f8fb] p-4">
+                    {selectedConversation ? (
+                      <>
+                        <div className="mb-3 border-b border-[#e5eaf0] pb-3 text-[12px] font-semibold text-[#31475e]">NegociaÃƒÂ§ÃƒÂ£o #{selectedConversation}</div>
+                        <div className="flex-1 space-y-2 overflow-auto">{(conversationMessages.data ?? []).map(message => <div key={message.id} className={`max-w-[88%] rounded-xl px-3 py-2 text-[11px] leading-5 ${message.remetenteId === auth.data.id ? "ml-auto bg-[#0b1f3a] text-white" : "bg-white text-[#52657a]"}`}>{message.conteudo}</div>)}</div>
+                        <form onSubmit={event => { event.preventDefault(); if (messageText.trim()) sendMessage.mutate({ conversaId: selectedConversation, conteudo: messageText }); }} className="mt-3 flex gap-2"><Input value={messageText} onChange={event => setMessageText(event.target.value)} placeholder="Escreva uma mensagem..." className="h-9 rounded-xl border-[#dce4ed] bg-white text-[11px]" /><StatefulButton type="submit" className="h-9 rounded-xl bg-[#0b1f3a] text-[11px]">Enviar</StatefulButton></form>
+                      </>
+                    ) : (
+                      <div className="flex flex-1 flex-col items-center justify-center text-center"><MessageSquareText size={21} className="text-[#b5c0cb]" /><p className="mt-2 text-[11px] text-[#8a98a8]">Selecione uma conversa<br />para ver as mensagens.</p></div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div id="ai-chat" className="scroll-mt-24 rounded-[22px] border border-white/70 bg-white/75 p-5 text-[#29485d] shadow-[0_12px_40px_rgba(47,111,159,0.10)] backdrop-blur-sm sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#d7b56a]"><Bot size={18} /></div>
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#d7b56a]">Concierge individual</div>
+                    <h2 className="mt-1 text-[19px] font-semibold tracking-[-0.035em]">Converse com o Qwen</h2>
+                    <p className="mt-1 text-[12px] text-white/50">Seu histÃƒÂ³rico ÃƒÂ© privado e fica associado ÃƒÂ  sua conta.</p>
+                  </div>
+                </div>
+                <Badge className="border-0 bg-[#214567] text-[10px] text-[#b9d3e8]">Qwen</Badge>
+              </div>
+              {!auth.data ? (
+                <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.06] p-5 text-center"><p className="text-[12px] leading-5 text-white/60">Entre na sua conta para conversar com a IA sobre compra, locaÃƒÂ§ÃƒÂ£o, visita e negociaÃƒÂ§ÃƒÂ£o.</p><StatefulButton onClick={() => { setAuthMode("login"); setAuthOpen(true); }} className="mt-4 rounded-xl bg-[#c99a3e] text-[12px] font-semibold text-[#071426] hover:bg-[#d9ad58]">Entrar para conversar</StatefulButton></div>
+              ) : (
+                <>
+                  <div className="mt-5 flex min-h-[210px] flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+                    {[...(aiHistory.data ?? []), ...pendingAiMessages].length ? [...(aiHistory.data ?? []), ...pendingAiMessages].map(message => <div key={message.id} className={`max-w-[88%] rounded-xl px-3 py-2 text-[11px] leading-5 ${message.role === "user" ? "ml-auto bg-[#c99a3e] text-[#071426]" : "bg-white/10 text-white/80"}`}>{message.conteudo}</div>) : <div className="m-auto max-w-[300px] text-center text-[12px] leading-5 text-white/50">OlÃƒÂ¡, {auth.data.name || "bem-vindo"}. Posso te ajudar a comparar bairros, analisar um anÃƒÂºncio ou preparar a prÃƒÂ³xima conversa.</div>}
+                    {sendAiMessage.isPending && <div className="flex items-center gap-2 self-start rounded-xl bg-white/10 px-3 py-2 text-[11px] text-white/60"><Loader2 className="animate-spin" size={13} /> Interpretando sua mensagemÃ¢â‚¬Â¦</div>}
+                  </div>
+                  <form onSubmit={event => { event.preventDefault(); handleAiSubmit(); }} className="mt-3 flex gap-2"><Input value={aiText} onChange={event => setAiText(event.target.value)} placeholder="Ex.: vale a pena comprar em Pinheiros?" className="h-10 rounded-xl border-white/10 bg-white/10 text-[12px] text-white placeholder:text-white/35" /><StatefulButton type="submit" disabled={sendAiMessage.isPending} className="h-10 rounded-xl bg-[#c99a3e] px-3 text-[11px] font-semibold text-[#071426] hover:bg-[#d9ad58]">{sendAiMessage.isPending ? <Loader2 className="animate-spin" size={15} /> : "Enviar"}</StatefulButton></form>
+                  {searchParams && <p className="mt-2 text-[10px] text-white/40">Usando os filtros da sua ÃƒÂºltima busca ({searchParams.cidade || searchParams.bairro || "sem local definido"}) como contexto.</p>}
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* ================= Meus imÃƒÂ³veis ================= */}
+          <section className="mt-14 scroll-mt-24 rounded-[24px] border border-white/80 bg-white/80 p-5 shadow-[0_12px_40px_rgba(47,111,159,0.08)] backdrop-blur-sm sm:p-6">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <div>
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#8a6110]">Conta e portfÃƒÂ³lio</div>
+                <h2 className="text-[19px] font-semibold tracking-[-0.035em] text-[#102033]">Meus imÃƒÂ³veis</h2>
+                <p className="mt-1 text-[12px] text-[#656e79]">Cadastre anÃƒÂºncios e acompanhe o que estÃƒÂ¡ publicado pela sua conta.</p>
+              </div>
+              <Button onClick={() => (auth.data ? setPropertyOpen(true) : (setAuthMode("register"), setAuthOpen(true)))} className="w-fit rounded-xl bg-[#0b1f3a] text-[12px]"><Plus size={15} className="mr-2" /> Cadastrar imÃƒÂ³vel</Button>
+            </div>
+            {!auth.data ? (
+              <div className="mt-5 rounded-2xl border border-dashed border-[#d6e0e9] bg-[#fbfcfe] p-4">
+                <div className="grid gap-2 sm:grid-cols-3"><Input value={authForm.name} onChange={event => setAuthForm({ ...authForm, name: event.target.value })} placeholder="Seu nome" className="h-10 rounded-xl border-[#dce4ed] bg-white text-[11px]" /><Input type="email" value={authForm.email} onChange={event => setAuthForm({ ...authForm, email: event.target.value })} placeholder="Seu email" className="h-10 rounded-xl border-[#dce4ed] bg-white text-[11px]" /><Input type="password" value={authForm.password} onChange={event => setAuthForm({ ...authForm, password: event.target.value })} placeholder="Senha (8+ caracteres)" className="h-10 rounded-xl border-[#dce4ed] bg-white text-[11px]" /></div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] text-[#8795a5]">Senha protegida por hash seguro.</span><StatefulButton onClick={handleAuthSubmitInline} disabled={register.isPending || login.isPending} className="rounded-xl bg-[#0b1f3a] text-[11px]">{register.isPending || login.isPending ? <Loader2 className="animate-spin" size={14} /> : "Criar conta e portfÃƒÂ³lio"}</StatefulButton></div>
+                <button onClick={() => { setAuthMode("login"); setAuthOpen(true); }} className="mt-2 text-[10px] font-semibold text-[#5d819f]">JÃƒÂ¡ tenho uma conta Ã¢â‚¬â€ entrar</button>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-3 md:grid-cols-3">
+                {(myProperties.data ?? []).length ? (myProperties.data ?? []).map(property => <PropertyCard key={property.id} property={property as DetailProperty} onOpenDetails={() => openDetails(property as DetailProperty)} />) : <div className="rounded-2xl bg-[#f6f8fb] p-5 text-[12px] text-[#8795a5] md:col-span-3">VocÃƒÂª ainda nÃƒÂ£o cadastrou imÃƒÂ³veis. Comece com os campos essenciais e complete o anÃƒÂºncio depois.</div>}
+              </div>
+            )}
+          </section>
+
+          <footer className="flex flex-col justify-between gap-2 border-t border-[#e7ecf2] py-6 text-[11px] text-[#9aa6b5] sm:flex-row"><span>ImobAI Ã‚Â· Real Estate Intelligence</span><span>Dados do catÃƒÂ¡logo ativo Ã‚Â· Disponibilidade atualizada em tempo real</span></footer>
         </div>
       </main>
 
@@ -879,9 +1090,6 @@ function Field({ label, children, className = "", dark = false }: { label: strin
 function MarketBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   return <div><div className="mb-1.5 flex items-center justify-between text-[11px]"><span className="font-medium text-[#596c80]">{label}</span><span className="font-semibold text-[#314861]">{money(value)}/mÃ‚Â²</span></div><div className="h-2 overflow-hidden rounded-full bg-[#edf1f5]"><div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((value / max) * 100))}%`, backgroundColor: color }} /></div></div>;
 }
-
-
-
 
 
 

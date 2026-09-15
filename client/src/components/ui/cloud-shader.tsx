@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -320,7 +320,7 @@ export const CloudShader = ({
     const draw = (now: number) => {
       if (!running) return;
       const p = paramsRef.current;
-      const elapsed = reduceMotion ? 0 : ((now - start) / 1000) * p.speed;
+      const elapsed = ((now - start) / 1000) * p.speed;
       const cloud = parseHex(p.cloudColor);
       const skyTop = parseHex(p.skyTopColor);
       const skyBottom = parseHex(p.skyBottomColor);
@@ -366,3 +366,4 @@ export const CloudShader = ({
     </div>
   );
 };
+
