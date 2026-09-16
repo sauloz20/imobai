@@ -97,6 +97,7 @@ export function PropertyFormModal({
   if (!open) return null;
 
   const editing = mode === "edit";
+  const completedSteps = [Boolean(values.bairro.trim() && values.cidade.trim()), Boolean(values.areaM2 && values.quartos >= 0), Boolean(files.length || editing), Boolean(copy)].filter(Boolean).length;
 
   return (
     <div
@@ -119,6 +120,19 @@ export function PropertyFormModal({
           <button onClick={onClose} className="rounded-lg p-1.5 text-[#8a98a8] transition hover:bg-[#f1f4f7]" aria-label="Fechar">
             <X size={17} />
           </button>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-[#e8edf3] bg-[#fbfcfe] p-3">
+          <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6c7f91]">
+            <span>{editing ? "Revisão do anúncio" : "Publicação guiada"}</span>
+            <span className="text-[#8a6110]">{completedSteps}/4 etapas</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e8edf3]">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#2f6f9f] to-[#c99a3e] transition-all" style={{ width: `${Math.max(12, completedSteps * 25)}%` }} />
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-1 text-[9px] text-[#8a98a8]">
+            <span>Dados</span><span>Características</span><span>Fotos</span><span>Revisão IA</span>
+          </div>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">

@@ -191,7 +191,7 @@ export function AIChatBox({
     <div
       ref={containerRef}
       className={cn(
-        "flex flex-col bg-card text-card-foreground rounded-lg border shadow-sm",
+        "flex flex-col overflow-hidden rounded-[24px] border border-[#dce6ee] bg-white/90 text-[#102033] shadow-[0_24px_70px_rgba(16,32,51,0.10)] backdrop-blur-xl",
         className
       )}
       style={{ height }}
@@ -213,7 +213,7 @@ export function AIChatBox({
                       key={index}
                       onClick={() => onSendMessage(prompt)}
                       disabled={isLoading}
-                      className="rounded-lg border border-border bg-card px-4 py-2 text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full border border-[#dce6ee] bg-white px-4 py-2 text-[11px] font-semibold text-[#40536a] shadow-sm transition hover:-translate-y-0.5 hover:border-[#c99a3e]/50 hover:text-[#8a6110] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {prompt}
                     </button>
@@ -306,7 +306,7 @@ export function AIChatBox({
       <form
         ref={inputAreaRef}
         onSubmit={handleSubmit}
-        className="flex gap-2 p-4 border-t bg-background/50 items-end"
+        className="flex items-end gap-2 border-t border-[#e6edf3] bg-[#fbfcfe]/90 p-4"
       >
         <Textarea
           ref={textareaRef}
@@ -314,14 +314,14 @@ export function AIChatBox({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 max-h-32 resize-none min-h-9"
+          className="min-h-10 max-h-32 flex-1 resize-none rounded-2xl border-[#dce6ee] bg-white text-[12px] shadow-none"
           rows={1}
         />
         <Button
           type="submit"
           size="icon"
           disabled={!input.trim() || isLoading}
-          className="shrink-0 h-[38px] w-[38px]"
+          className="h-10 w-10 shrink-0 rounded-2xl bg-[#10233f] hover:bg-[#1c4a73]"
         >
           {isLoading ? (
             <Loader2 className="size-4 animate-spin" />

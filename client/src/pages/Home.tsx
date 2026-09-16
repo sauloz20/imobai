@@ -1,4 +1,5 @@
 ﻿import { CloudShader } from "@/components/ui/cloud-shader";
+import { GlobalHeader } from "@/components/GlobalHeader";
 import { AuthModal } from "@/components/AuthModal";
 import { ConfirmDeleteDialog, ProfileModal } from "@/components/ProfileModal";
 import { PropertyDetailsModal, type DetailProperty } from "@/components/PropertyDetailsModal";
@@ -81,7 +82,7 @@ const money = (value: number | string | null | undefined, compact = false) => {
 const EMPTY_PROPERTY_FORM: PropertyFormValues = {
   tipo: "Apartamento",
   bairro: "",
-  cidade: "SÃƒÂ£o Paulo",
+  cidade: "São Paulo",
   quartos: 2,
   banheiros: 1,
   vagas: 1,
@@ -93,11 +94,11 @@ const EMPTY_PROPERTY_FORM: PropertyFormValues = {
 };
 
 const navItems = [
-  { label: "VisÃƒÂ£o geral", icon: BarChart3, target: "overview" },
+  { label: "Visão geral", icon: BarChart3, target: "overview" },
   { label: "Busca inteligente", icon: Search, target: "search" },
-  { label: "CatÃƒÂ¡logo", icon: Building2, target: "catalog" },
-  { label: "PrecificaÃƒÂ§ÃƒÂ£o", icon: CircleDollarSign, target: "pricing" },
-  { label: "Minhas negociaÃƒÂ§ÃƒÂµes", icon: MessageSquareText, target: "inbox" },
+  { label: "Catálogo", icon: Building2, target: "catalog" },
+  { label: "Precificação", icon: CircleDollarSign, target: "pricing" },
+  { label: "Minhas negociações", icon: MessageSquareText, target: "inbox" },
   { label: "Concierge Qwen", icon: Bot, target: "ai-chat" },
 ];
 
@@ -156,59 +157,59 @@ export default function Home() {
       const merged = finalidadeOverride ? { ...result, finalidade: finalidadeOverride } : result;
       setInterpretation(merged);
       setSearchParams(merged);
-      toast.success("Busca interpretada pelo ImobAI", { description: result.source === "agent" ? "Agente conectado" : "Modo demonstraÃƒÂ§ÃƒÂ£o ativo" });
+      toast.success("Busca interpretada pelo ImobAI", { description: result.source === "agent" ? "Agente conectado" : "Modo demonstração ativo" });
     },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel interpretar a busca", { description: error.message }),
+    onError: error => toast.error("Não foi possível interpretar a busca", { description: error.message }),
   });
   const generateAd = trpc.agent.generateAd.useMutation({
     onSuccess: result => {
       setAdResult(result);
-      toast.success("AnÃƒÂºncio gerado em segundos");
+      toast.success("Anúncio gerado em segundos");
     },
-    onError: error => toast.error("Falha ao gerar anÃƒÂºncio", { description: error.message }),
+    onError: error => toast.error("Falha ao gerar anúncio", { description: error.message }),
   });
   const suggestPrice = trpc.agent.suggestPrice.useMutation({
     onSuccess: result => {
       setPriceResult(result);
-      toast.success("SugestÃƒÂ£o de preÃƒÂ§o calculada");
+      toast.success("Sugestão de preço calculada");
     },
-    onError: error => toast.error("Falha ao sugerir preÃƒÂ§o", { description: error.message }),
+    onError: error => toast.error("Falha ao sugerir preço", { description: error.message }),
   });
   const login = trpc.auth.login.useMutation({
     onSuccess: user => { utils.auth.me.setData(undefined, user); setAuthOpen(false); toast.success(`Bem-vindo, ${user.name || "ao ImobAI"}`); },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel entrar", { description: error.message }),
+    onError: error => toast.error("Não foi possível entrar", { description: error.message }),
   });
   const register = trpc.auth.register.useMutation({
     onSuccess: user => { utils.auth.me.setData(undefined, user); setAuthOpen(false); toast.success("Conta criada com sucesso"); },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel criar a conta", { description: error.message }),
+    onError: error => toast.error("Não foi possível criar a conta", { description: error.message }),
   });
-  const logout = trpc.auth.logout.useMutation({ onSuccess: async () => { utils.auth.me.setData(undefined, null); await utils.auth.me.invalidate(); toast.success("SessÃƒÂ£o encerrada"); } });
+  const logout = trpc.auth.logout.useMutation({ onSuccess: async () => { utils.auth.me.setData(undefined, null); await utils.auth.me.invalidate(); toast.success("Sessão encerrada"); } });
   const createProperty = trpc.property.create.useMutation({
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel cadastrar o imÃƒÂ³vel", { description: error.message }),
+    onError: error => toast.error("Não foi possível cadastrar o imóvel", { description: error.message }),
   });
   const generatePropertyCopy = trpc.property.generateCopy.useMutation({
-    onSuccess: result => { setPropertyCopy(result); toast.success("DescriÃƒÂ§ÃƒÂ£o comercial criada pelo Qwen"); },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel gerar a descriÃƒÂ§ÃƒÂ£o", { description: error.message }),
+    onSuccess: result => { setPropertyCopy(result); toast.success("Descrição comercial criada pelo Qwen"); },
+    onError: error => toast.error("Não foi possível gerar a descrição", { description: error.message }),
   });
   const uploadPhotos = trpc.property.uploadPhotos.useMutation({
-    onError: error => toast.error("O imÃƒÂ³vel foi criado, mas algumas fotos nÃƒÂ£o foram enviadas", { description: error.message }),
+    onError: error => toast.error("O imóvel foi criado, mas algumas fotos não foram enviadas", { description: error.message }),
   });
   const updateProperty = trpc.property.update.useMutation({
     onSuccess: () => {
       setPropertyOpen(false);
       setEditingProperty(null);
       myProperties.refetch();
-      toast.success("ImÃƒÂ³vel atualizado com sucesso");
+      toast.success("Imóvel atualizado com sucesso");
     },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel salvar as alteraÃƒÂ§ÃƒÂµes", { description: error.message }),
+    onError: error => toast.error("Não foi possível salvar as alterações", { description: error.message }),
   });
   const removeProperty = trpc.property.remove.useMutation({
     onSuccess: () => {
       setDeletingProperty(null);
       myProperties.refetch();
-      toast.success("ImÃƒÂ³vel excluÃƒÂ­do");
+      toast.success("Imóvel excluído");
     },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel excluir o imÃƒÂ³vel", { description: error.message }),
+    onError: error => toast.error("Não foi possível excluir o imóvel", { description: error.message }),
   });
   const updateProfile = trpc.auth.updateProfile.useMutation({
     onSuccess: user => {
@@ -216,16 +217,16 @@ export default function Home() {
       setProfileOpen(false);
       toast.success("Perfil atualizado");
     },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel atualizar o perfil", { description: error.message }),
+    onError: error => toast.error("Não foi possível atualizar o perfil", { description: error.message }),
   });
   const startConversation = trpc.conversation.start.useMutation({
-    onSuccess: conversation => { setSelectedConversation(conversation.id); conversations.refetch(); scrollTo("inbox"); toast.success("NegociaÃƒÂ§ÃƒÂ£o iniciada"); },
-    onError: error => toast.error("NÃƒÂ£o foi possÃƒÂ­vel iniciar a negociaÃƒÂ§ÃƒÂ£o", { description: error.message }),
+    onSuccess: conversation => { setSelectedConversation(conversation.id); conversations.refetch(); scrollTo("inbox"); toast.success("Negociação iniciada"); },
+    onError: error => toast.error("Não foi possível iniciar a negociação", { description: error.message }),
   });
   const sendMessage = trpc.conversation.send.useMutation({ onSuccess: () => { setMessageText(""); conversationMessages.refetch(); conversations.refetch(); } });
   const sendAiMessage = trpc.aiChat.send.useMutation({
     onSuccess: result => {
-      // Substitui o estado otimista pelo histÃƒÂ³rico real (mensagem do usuÃƒÂ¡rio + resposta da IA).
+      // Substitui o estado otimista pelo histórico real (mensagem do usuário + resposta da IA).
       setPendingAiMessages([]);
       setAiText("");
       utils.aiChat.history.setData(undefined, [...(aiHistory.data ?? []), result.message]);
@@ -233,7 +234,7 @@ export default function Home() {
     },
     onError: error => {
       setPendingAiMessages([]);
-      toast.error("O Concierge nÃƒÂ£o conseguiu responder agora", { description: error.message });
+      toast.error("O Concierge não conseguiu responder agora", { description: error.message });
     },
   });
 
@@ -242,7 +243,7 @@ export default function Home() {
     setPropertyForm({
       tipo: String(property.tipo ?? "Apartamento"),
       bairro: String(property.bairro ?? ""),
-      cidade: String(property.cidade ?? "SÃƒÂ£o Paulo"),
+      cidade: String(property.cidade ?? "São Paulo"),
       quartos: Number(property.quartos ?? 0),
       banheiros: Number(property.banheiros ?? 0),
       vagas: Number(property.vagas ?? 0),
@@ -259,7 +260,7 @@ export default function Home() {
 
   const handlePropertyEditSubmit = async (): Promise<void> => {
     if (!editingProperty || !propertyForm.bairro.trim()) {
-      toast.error("Informe o bairro do imÃƒÂ³vel");
+      toast.error("Informe o bairro do imóvel");
       return;
     }
     updateProperty.mutate({
@@ -285,15 +286,15 @@ export default function Home() {
   };
 
   const handleSuggestPrice = () => {
-    // FASE 2.3: nunca calcular com dados faltando, zero, negativo ou nÃƒÂ£o numÃƒÂ©ricos.
+    // FASE 2.3: nunca calcular com dados faltando, zero, negativo ou não numéricos.
     const bairro = priceForm.bairro.trim();
     const area = Number(priceForm.areaM2);
     if (!bairro) {
-      toast.error("Preencha todos os campos necessÃƒÂ¡rios para realizar o cÃƒÂ¡lculo.", { description: "Informe o bairro do imÃƒÂ³vel." });
+      toast.error("Preencha todos os campos necessários para realizar o cálculo.", { description: "Informe o bairro do imóvel." });
       return;
     }
     if (!Number.isFinite(area) || area <= 0) {
-      toast.error("Preencha todos os campos necessÃƒÂ¡rios para realizar o cÃƒÂ¡lculo.", { description: "A ÃƒÂ¡rea (mÃ‚Â²) deve ser um nÃƒÂºmero maior que zero." });
+      toast.error("Preencha todos os campos necessários para realizar o cálculo.", { description: "A área (m²) deve ser um número maior que zero." });
       return;
     }
     suggestPrice.mutate({ ...priceForm, bairro, areaM2: area, diferenciais: priceForm.diferenciais.split(",").map(item => item.trim()).filter(Boolean) });
@@ -321,11 +322,11 @@ export default function Home() {
       return null;
     }
     if (!/^\S+@\S+\.\S+$/.test(email)) {
-      toast.error("Informe um email vÃƒÂ¡lido");
+      toast.error("Informe um email válido");
       return null;
     }
     if (values.password.length < 8) {
-      toast.error("A senha ÃƒÂ© muito curta", { description: "Use pelo menos 8 caracteres." });
+      toast.error("A senha é muito curta", { description: "Use pelo menos 8 caracteres." });
       return null;
     }
     return { name, email, password: values.password };
@@ -347,7 +348,7 @@ export default function Home() {
     else submitInlineRegistration();
   };
   const handleGenerateCopy = () => {
-    if (!propertyForm.bairro.trim()) return toast.error("Informe o bairro antes de gerar a descriÃƒÂ§ÃƒÂ£o");
+    if (!propertyForm.bairro.trim()) return toast.error("Informe o bairro antes de gerar a descrição");
     generatePropertyCopy.mutate({
       ...propertyForm,
       tipo: propertyForm.tipo,
@@ -359,7 +360,7 @@ export default function Home() {
   };
   const handlePropertySubmit = async (): Promise<void> => {
     if (!propertyForm.bairro.trim()) {
-      toast.error("Informe o bairro do imÃƒÂ³vel");
+      toast.error("Informe o bairro do imóvel");
       return;
     }
     try {
@@ -384,9 +385,9 @@ export default function Home() {
       setPropertyCopy(null);
       setPropertyForm(EMPTY_PROPERTY_FORM);
       myProperties.refetch();
-      toast.success(`ImÃƒÂ³vel publicado${propertyFiles.length ? ` com ${propertyFiles.length} fotos` : ""}`);
+      toast.success(`Imóvel publicado${propertyFiles.length ? ` com ${propertyFiles.length} fotos` : ""}`);
     } catch (error) {
-      toast.error("NÃƒÂ£o foi possÃƒÂ­vel concluir a publicaÃƒÂ§ÃƒÂ£o", { description: error instanceof Error ? error.message : "Tente novamente" });
+      toast.error("Não foi possível concluir a publicação", { description: error instanceof Error ? error.message : "Tente novamente" });
     }
   };
   const handleAiSubmit = () => {
@@ -400,7 +401,7 @@ export default function Home() {
   };
   const negotiate = (property: any) => {
     if (!auth.data) return setAuthOpen(true);
-    if (!property.ownerId) return toast.info("Este imÃƒÂ³vel demonstrativo ainda nÃƒÂ£o tem um proprietÃƒÂ¡rio cadastrado.");
+    if (!property.ownerId) return toast.info("Este imóvel demonstrativo ainda não tem um proprietário cadastrado.");
     startConversation.mutate({ imovelId: property.id, proprietarioId: property.ownerId });
   };
 
@@ -411,6 +412,7 @@ export default function Home() {
 
   return (
     <div className="imobai-app-shell relative min-h-screen text-[#102033]">
+      <GlobalHeader onMenu={() => setMobileNavOpen(true)} />
       {/* ================= AppShell ================= */}
       <aside className={`fixed inset-y-0 left-0 z-40 hidden w-[254px] flex-col border-r border-[#172c45] bg-[#102033] text-white transition-transform duration-200 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-[84px] items-center border-b border-white/10 px-6">
@@ -426,7 +428,7 @@ export default function Home() {
         </nav>
         <div className="mt-auto px-4 pb-5">
           <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4"><div className="flex items-center gap-2 text-[11px] font-semibold text-[#d7b56a]"><span className="imobai-ai-pulse h-1.5 w-1.5 rounded-full bg-[#e7c984]" /> Agente IA online</div><p className="mt-2 text-[12px] leading-5 text-white/50">Pronto para interpretar buscas, gerar copy e sugerir valores.</p></div>
-          <button type="button" onClick={() => (auth.data ? setProfileOpen(true) : (setAuthMode("login"), setAuthOpen(true)))} className="flex w-full items-center gap-3 border-t border-white/10 pt-4 text-left transition hover:opacity-90"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dbe8f5] text-[12px] font-bold text-[#0b1f3a]">{(auth.data?.name || auth.data?.email || "U").trim().slice(0, 2).toUpperCase()}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{auth.data?.name || auth.data?.email || "UsuÃƒÂ¡rio"}</div><div className="truncate text-[11px] text-white/40">{auth.data ? "Meu perfil Ã‚Â· sessÃƒÂ£o ativa" : "Entrar na minha conta"}</div></div><ChevronRight size={15} className="ml-auto text-white/30" /></button>
+          <button type="button" onClick={() => (auth.data ? setProfileOpen(true) : (setAuthMode("login"), setAuthOpen(true)))} className="flex w-full items-center gap-3 border-t border-white/10 pt-4 text-left transition hover:opacity-90"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dbe8f5] text-[12px] font-bold text-[#0b1f3a]">{(auth.data?.name || auth.data?.email || "U").trim().slice(0, 2).toUpperCase()}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{auth.data?.name || auth.data?.email || "Usuário"}</div><div className="truncate text-[11px] text-white/40">{auth.data ? "Meu perfil · sessão ativa" : "Entrar na minha conta"}</div></div><ChevronRight size={15} className="ml-auto text-white/30" /></button>
         </div>
       </aside>
       {mobileNavOpen && <button className="fixed inset-0 z-30 bg-[#071426]/50 lg:hidden" onClick={() => setMobileNavOpen(false)} aria-label="Fechar menu" />}
@@ -436,68 +438,7 @@ export default function Home() {
 </div>
 
 <main className="relative z-10">
-        <header className="absolute top-0 left-0 z-30 w-full border-0 bg-transparent">
-  <div className="mx-auto flex h-[68px] max-w-[1280px] items-center justify-between px-5 sm:px-8">
-
-    <a href="/" className="flex items-center gap-2.5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#2f6f9f] shadow-[0_4px_16px_rgba(25,75,105,0.10)]">
-        <Building2 size={18} strokeWidth={2.2} />
-      </div>
-
-      <div>
-        <div className="text-[17px] font-bold tracking-[-0.04em] text-white drop-shadow-[0_2px_8px_rgba(20,61,87,0.22)]">
-          Imob<span className="text-[#2f6f9f]">AI</span>
-        </div>
-      </div>
-    </a>
-
-    <div className="flex items-center gap-2">
-
-      {auth.data && (
-        <button
-          type="button"
-          className="hidden rounded-full px-3.5 py-2 text-[12px] font-semibold text-[#526577] transition hover:bg-[#f1f6fa] sm:block"
-        >
-          {auth.data.name || "Minha conta"}
-        </button>
-      )}
-
-      {!auth.data && (
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("login");
-            setAuthOpen(true);
-          }}
-          className="hidden rounded-full bg-[#2f6f9f] px-5 py-2.5 text-[12px] font-semibold text-white shadow-[0_6px_18px_rgba(47,111,159,0.18)] transition hover:bg-[#275f88] sm:block"
-        >
-          Entrar
-        </button>
-      )}
-
-      {auth.data && (
-        <button
-          type="button"
-          onClick={() => logout.mutate()}
-          className="hidden rounded-full border border-[#dce7ef] bg-white px-4 py-2 text-[12px] font-semibold text-[#456177] transition hover:border-[#bfd4e3] hover:bg-[#f7fafc] sm:block"
-        >
-          Sair
-        </button>
-      )}
-
-      <button
-        type="button"
-        onClick={() => setMobileNavOpen(true)}
-        aria-label="Abrir menu"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#dce7ef] bg-white text-[#365b73] shadow-sm transition hover:border-[#bfd4e3] hover:bg-[#f7fafc]"
-      >
-        <Menu size={20} strokeWidth={2.2} />
-      </button>
-
-    </div>
-  </div>
-</header>
-{mobileNavOpen && (
+        {mobileNavOpen && (
   <div className="fixed inset-0 z-[100]">
     <button
       type="button"
@@ -679,14 +620,15 @@ export default function Home() {
             className="relative flex min-h-[680px] items-center justify-center overflow-hidden rounded-b-[42px] px-5 py-24 text-center sm:px-8 lg:min-h-[720px]"
           ><div className="relative z-10 mx-auto w-full max-w-[1050px]">
 
-              <h1 className="mx-auto max-w-[900px] text-[44px] font-semibold leading-[0.98] tracking-[-0.055em] text-white drop-shadow-[0_3px_18px_rgba(20,61,87,0.22)] sm:text-[64px] lg:text-[78px]">
+              <h1
+                className="mx-auto max-w-[900px] font-['Nunito'] text-[44px] font-800 leading-[0.98] tracking-[-0.055em] text-white sm:text-[64px] lg:text-[78px]"
+                style={{
+                  textShadow: "0 4px 18px rgba(15, 45, 65, 0.35)",
+                }}
+              >
                 Encontre o imóvel
                 <span className="block">ideal para você</span>
               </h1>
-
-              <p className="mx-auto mt-6 max-w-[650px] text-[14px] leading-6 text-white/90 drop-shadow-[0_2px_10px_rgba(20,61,87,0.18)] sm:text-[16px]">
-                Casas, apartamentos e espaços selecionados para comprar ou alugar.
-              </p>
 
               <div id="search" className="mx-auto mt-9 w-full max-w-[760px] scroll-mt-24">
                 <div className="flex h-[62px] items-center rounded-full bg-white px-5 shadow-[0_10px_35px_rgba(25,75,105,0.14)]">
@@ -719,7 +661,19 @@ export default function Home() {
                       "Buscar"
                     )}
                   </StatefulButton>
-              </div>
+                </div>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {SEARCH_SUGGESTIONS.slice(0, 4).map(suggestion => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setSearchText(suggestion)}
+                      className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-[10px] font-semibold text-white/85 backdrop-blur-sm hover:border-white/60 hover:bg-white/20"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
             </div>
           </div>
         </section>
@@ -877,8 +831,14 @@ function Field({ label, children, className = "", dark = false }: { label: strin
 }
 
 function MarketBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-  return <div><div className="mb-1.5 flex items-center justify-between text-[11px]"><span className="font-medium text-[#596c80]">{label}</span><span className="font-semibold text-[#314861]">{money(value)}/mÃ‚Â²</span></div><div className="h-2 overflow-hidden rounded-full bg-[#edf1f5]"><div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((value / max) * 100))}%`, backgroundColor: color }} /></div></div>;
+  return <div><div className="mb-1.5 flex items-center justify-between text-[11px]"><span className="font-medium text-[#596c80]">{label}</span><span className="font-semibold text-[#314861]">{money(value)}/m²</span></div><div className="h-2 overflow-hidden rounded-full bg-[#edf1f5]"><div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((value / max) * 100))}%`, backgroundColor: color }} /></div></div>;
 }
+
+
+
+
+
+
 
 
 

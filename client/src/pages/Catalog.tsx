@@ -1,8 +1,12 @@
+import { CloudShader } from "@/components/ui/cloud-shader";
+import { GlobalHeader } from "@/components/GlobalHeader";
 import { PropertyDetailsModal, type DetailProperty } from "@/components/PropertyDetailsModal";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc";
+import { formatPropertyPlace, normalizePropertyText } from "@/lib/property";
 import { cn } from "@/lib/utils";
 import { Bath, BedDouble, Car, FilterX, MapPin, PawPrint, SearchX, SlidersHorizontal, Sun, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -99,6 +103,7 @@ function serializeState(state: CatalogState): string {
 export default function Catalog() {
   const query = useSearch();
   const [detailsProperty, setDetailsProperty] = useState<DetailProperty | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const state = useMemo(() => parseState(query), [query]);
   const propertiesQuery = trpc.property.list.useQuery({
     limit: 500,
@@ -109,7 +114,12 @@ export default function Catalog() {
     valorMin: state.valorMin ?? undefined,
     valorMax: state.valorMax ?? undefined,
   });
-  const properties = (propertiesQuery.data ?? []) as Property[];
+  const properties = ((propertiesQuery.data ?? []) as Property[]).map(item => ({
+    ...item,
+    bairro: formatPropertyPlace(item.bairro),
+    cidade: formatPropertyPlace(item.cidade),
+    tituloAnuncio: normalizePropertyText(item.tituloAnuncio),
+  }));
   const isLoading = propertiesQuery.isLoading;
   const onOpenDetails = (property: Property) => setDetailsProperty(property as DetailProperty);
   const [, navigate] = useLocation();
@@ -166,7 +176,13 @@ export default function Catalog() {
   ].filter(Boolean).length;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen overflow-hidden pb-16 pt-24">
+      <GlobalHeader onLogin={() => navigate("/?auth=login")} />
+      <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.42]" aria-hidden="true">
+        <CloudShader className="h-full w-full" count={4} speed={0.72} skyTopColor="#d9eaf7" skyBottomColor="#f7fafc" cloudColor="#ffffff" />
+      </div>
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[linear-gradient(180deg,rgba(247,250,252,0.18),rgba(247,250,252,0.82)_72%,#f7fafc)]" aria-hidden="true" />
+      <div className="mx-auto w-full max-w-[1380px] px-4 sm:px-6 lg:px-8">
       <header className="imobai-reveal">
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8a6110]">Catálogo completo</p>
         <h1 className="imobai-gold-line mt-2 inline-block text-[28px] font-semibold tracking-[-0.035em] text-[#102033] sm:text-[34px]">
@@ -175,10 +191,21 @@ export default function Catalog() {
         <p className="mt-3 max-w-[620px] text-[14px] leading-6 text-[#40536a]">
           Explore o catálogo com filtros reais de finalidade, tipo, preço e diferenciais. Os filtros ficam salvos na URL — você pode compartilhar uma busca ou voltar a ela depois.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {[
+            ["Dados revisados", "Informações normalizadas"],
+            ["Busca inteligente", "Filtros compartilháveis"],
+            ["Concierge IA", "Recomendações personalizadas"],
+          ].map(([title, description]) => (
+            <span key={title} title={description} className="rounded-full border border-[#dce6ee] bg-white/75 px-3 py-1.5 text-[10px] font-semibold text-[#526577] shadow-sm">
+              <span className="mr-1.5 text-[#c99a3e]">●</span>{title}
+            </span>
+          ))}
+        </div>
       </header>
 
       {/* Filtros */}
-      <section aria-label="Filtros do catálogo" className="imobai-premium-surface mt-6 rounded-[20px] p-4 sm:p-5">
+      <section aria-label="Filtros do catálogo" className="imobai-filter-surface mt-7 rounded-[24px] p-4 sm:p-5 lg:p-6">
         <div className="flex flex-wrap items-center gap-2">
           <SlidersHorizontal size={15} className="text-[#8a6110]" aria-hidden />
           <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#656e79]">Filtros</span>
@@ -196,7 +223,7 @@ export default function Catalog() {
           )}
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           <div>
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-[#656e79]">Finalidade</label>
             <div className="flex gap-1.5">
@@ -355,7 +382,7 @@ export default function Catalog() {
       </div>
 
       {isLoading ? (
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className="overflow-hidden rounded-[22px] border border-[#e7ecf2] bg-white">
               <Skeleton className="aspect-[4/3] w-full rounded-none" />
@@ -406,6 +433,7 @@ export default function Catalog() {
         similar={detailsProperty ? properties.filter(item => item.id !== detailsProperty.id && (item.bairro === detailsProperty.bairro || item.tipo === detailsProperty.tipo)).slice(0, 3) as DetailProperty[] : []}
         onSelectSimilar={item => setDetailsProperty(item as DetailProperty)}
       />
+    </div>
     </div>
   );
 }

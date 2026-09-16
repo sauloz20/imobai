@@ -22,15 +22,17 @@ export function PremiumImagePlaceholder({ className }: { className?: string }) {
       role="img"
       aria-label="Imagem não cadastrada"
       className={cn(
-        "flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-[#2c4a68] via-[#22384f] to-[#14243a] text-white/70",
+        "relative flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden bg-[radial-gradient(circle_at_20%_15%,rgba(201,154,62,0.24),transparent_30%),linear-gradient(135deg,#2c4a68,#14243a)] text-white/70",
         className
       )}
     >
+      <span className="pointer-events-none absolute inset-0 opacity-20 [background-image:linear-gradient(135deg,transparent_48%,rgba(255,255,255,0.18)_49%,transparent_51%)] [background-size:28px_28px]" aria-hidden="true" />
       <Building2 size={28} strokeWidth={1.4} className="text-white/45" />
       <span className="px-4 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
-        Imagem não cadastrada
+        Imagem do anúncio
       </span>
       <span className="h-px w-10 bg-[#c99a3e]/60" />
+      <span className="text-[10px] text-white/35">Adicione fotos para destacar este imóvel</span>
     </div>
   );
 }

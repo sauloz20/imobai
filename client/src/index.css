@@ -1,4 +1,6 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -487,3 +489,36 @@ button:disabled {
 ::selection {
   background: rgba(47, 111, 159, 0.18);
 }
+
+
+/* Product-wide refinement: calm surfaces, intentional focus and responsive rhythm. */
+@layer components {
+  .imobai-glass-header {
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 12px 34px rgba(16, 32, 51, 0.09);
+    backdrop-filter: blur(18px);
+  }
+  .imobai-filter-surface {
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 18px 52px rgba(16, 32, 51, 0.08);
+    backdrop-filter: blur(18px);
+  }
+  .imobai-section-label { color: var(--gold-500); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
+}
+@media (max-width: 640px) {
+  .imobai-card-hover:hover { transform: none; box-shadow: var(--shadow-card-premium); }
+}
+
+
+/* Global cloud environment and restrained premium surface system. */
+:root {
+  --imobai-atmosphere: rgba(247, 250, 252, 0.78);
+  --imobai-glass: rgba(255, 255, 255, 0.76);
+  --imobai-solid: rgba(255, 255, 255, 0.94);
+  --imobai-shadow-soft: 0 18px 52px rgba(16, 32, 51, 0.08);
+}
+.imobai-solid-surface { background: var(--imobai-solid); box-shadow: var(--imobai-shadow-soft); }
+@media (prefers-reduced-motion: reduce) { .imobai-card-hover:hover { transform: none !important; } }
+
