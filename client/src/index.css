@@ -1,6 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -11,6 +9,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -30,11 +29,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -45,123 +40,153 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-:root {
-  --radius: 0.8rem;
-  --background: #f5f7fb;
-  --foreground: #122033;
-  --card: #ffffff;
-  --card-foreground: #122033;
-  --popover: #ffffff;
-  --popover-foreground: #122033;
-  --primary: #10233f;
-  --primary-foreground: #ffffff;
-  --secondary: #eef3f8;
-  --secondary-foreground: #25415d;
-  --muted: #eef3f8;
-  --muted-foreground: #626e7c;
-  --accent: #fff6df;
-  --accent-foreground: #825d12;
-  --destructive: #d85b5b;
-  --destructive-foreground: #ffffff;
-  --border: #e4eaf1;
-  --input: #dce4ed;
-  --ring: #9bb9d4;
-  --chart-1: #4e789d;
-  --chart-2: #ffc857;
-  --chart-3: #6aa77f;
-  --chart-4: #8e80bd;
-  --chart-5: #d97d65;
-  --sidebar: #10233f;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ffc857;
-  --sidebar-primary-foreground: #10233f;
-  --sidebar-accent: #1b3554;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255,255,255,0.1);
-  --sidebar-ring: #ffc857;
-}
-
-* { border-color: var(--border); }
-html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; background: var(--background); color: var(--foreground); font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
-h1, h2, h3, h4 { font-family: 'Manrope', 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
-button, input, textarea, select { font: inherit; }
-button { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: 0.65; }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-}
-
-@layer components {
-  .container { width: 100%; margin-inline: auto; padding-inline: 1rem; }
-  .flex { min-height: 0; min-width: 0; }
-  @media (min-width: 640px) { .container { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .container { max-width: 1280px; padding-inline: 2rem; } }
-}
-
 /* ============================================================
-   ImobAI Premium Design Foundation
+   IMOB AI — SKY AS INTERFACE
+   Visual foundation
    ============================================================ */
 
 :root {
-  --navy-950: #071426;
-  --navy-900: #0b1f3a;
-  --navy-800: #12345a;
-  --navy-700: #1c4a73;
+  /* -----------------------------
+     SKY
+     ----------------------------- */
 
-  --gold-500: #c99a3e;
-  --gold-400: #d9ad58;
-  --gold-300: #e7c984;
-  --gold-soft: #fff5df;
+  --sky-50: #f8fbfd;
+  --sky-100: #edf5fa;
+  --sky-200: #dcebf4;
+  --sky-300: #c6deec;
+  --sky-400: #a8c9dd;
+  --sky-500: #83aec9;
+  --sky-600: #5f91b1;
+  --sky-700: #41728f;
+  --sky-800: #315a73;
+  --sky-900: #294b5f;
 
-  --ink-950: #102033;
-  --ink-800: #22364d;
-  --ink-700: #40536a;
-  --ink-500: #616e81;
-  --ink-400: #656e79;
+  /* -----------------------------
+     ATMOSPHERE
+     ----------------------------- */
 
-  --surface-0: #ffffff;
-  --surface-50: #f6f8fb;
-  --surface-100: #eef2f6;
-  --surface-200: #e4eaf1;
+  --atmosphere-white: rgba(255, 255, 255, 0.78);
+  --atmosphere-soft: rgba(248, 251, 253, 0.68);
+  --atmosphere-clear: rgba(255, 255, 255, 0.42);
+  --atmosphere-deep: rgba(41, 75, 95, 0.12);
 
-  --line-subtle: rgba(16, 32, 51, 0.08);
-  --line-strong: #d8e1ea;
+  /* -----------------------------
+     CORE COLORS
+     ----------------------------- */
 
-  --success-premium: #2f8b61;
-  --warning-premium: #b97918;
-  --danger-premium: #b64b4b;
+  --background: #f5f9fc;
+  --foreground: #17232d;
 
-  --shadow-card-premium:
-    0 18px 50px rgba(16, 32, 51, 0.07),
-    0 2px 8px rgba(16, 32, 51, 0.03);
+  --card: rgba(255, 255, 255, 0.9);
+  --card-foreground: #17232d;
 
-  --shadow-card-hover:
-    0 26px 70px rgba(16, 32, 51, 0.14),
-    0 6px 18px rgba(16, 32, 51, 0.06);
+  --popover: rgba(255, 255, 255, 0.96);
+  --popover-foreground: #17232d;
 
-  --shadow-modal-premium:
-    0 35px 100px rgba(7, 20, 38, 0.28);
+  --primary: #315a73;
+  --primary-foreground: #ffffff;
 
-  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --secondary: #eaf3f8;
+  --secondary-foreground: #315a73;
+
+  --muted: #edf4f8;
+  --muted-foreground: #667783;
+
+  --accent: #dcebf4;
+  --accent-foreground: #315a73;
+
+  --destructive: #b84f52;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(49, 90, 115, 0.14);
+  --input: rgba(49, 90, 115, 0.18);
+  --ring: #83aec9;
+
+  /* -----------------------------
+     SIDEBAR
+     ----------------------------- */
+
+  --sidebar: rgba(241, 248, 252, 0.86);
+  --sidebar-foreground: #17232d;
+  --sidebar-primary: #315a73;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(220, 235, 244, 0.72);
+  --sidebar-accent-foreground: #315a73;
+  --sidebar-border: rgba(49, 90, 115, 0.12);
+  --sidebar-ring: #83aec9;
+
+  /* -----------------------------
+     IMOBAI TOKENS
+     ----------------------------- */
+
+  --imobai-sky: #83aec9;
+  --imobai-sky-deep: #315a73;
+  --imobai-sky-soft: #eaf3f8;
+
+  --imobai-cloud: rgba(255, 255, 255, 0.78);
+  --imobai-cloud-solid: rgba(255, 255, 255, 0.94);
+
+  --imobai-surface: rgba(255, 255, 255, 0.72);
+  --imobai-surface-strong: rgba(255, 255, 255, 0.9);
+
+  --imobai-line: rgba(49, 90, 115, 0.13);
+  --imobai-line-strong: rgba(49, 90, 115, 0.2);
+
+  --imobai-shadow:
+    0 18px 50px rgba(41, 75, 95, 0.08);
+
+  --imobai-shadow-hover:
+    0 24px 64px rgba(41, 75, 95, 0.13);
+
+  --imobai-shadow-floating:
+    0 28px 80px rgba(41, 75, 95, 0.16);
+
+  --imobai-blur: 20px;
+  --imobai-blur-strong: 30px;
+
+  --radius: 0.75rem;
+
+  --imobai-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+* {
+  border-color: var(--border);
 }
 
 html {
   scroll-behavior: smooth;
-  background: var(--surface-50);
+  background: var(--background);
 }
 
 body {
+  margin: 0;
+  min-width: 320px;
+
   background:
     radial-gradient(
-      circle at 88% 0%,
-      rgba(201, 154, 62, 0.055),
-      transparent 28rem
+      circle at 50% -20%,
+      rgba(255, 255, 255, 0.95),
+      transparent 42rem
     ),
-    var(--surface-50);
-  color: var(--ink-950);
-  font-family: "DM Sans", sans-serif;
+    linear-gradient(
+      180deg,
+      #eef7fc 0%,
+      #f5f9fc 38%,
+      #f7fafc 100%
+    );
+
+  color: var(--foreground);
+
+  font-family:
+    "DM Sans",
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -172,19 +197,245 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Manrope", sans-serif;
+  margin-top: 0;
+
+  font-family:
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+a {
+  color: inherit;
+}
+
+/* ============================================================
+   SKY ENVIRONMENT
+   ============================================================ */
+
+.imobai-app-shell {
+  position: relative;
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(232, 245, 252, 0.88) 0%,
+      rgba(245, 249, 252, 0.94) 48%,
+      rgba(248, 250, 252, 0.98) 100%
+    );
+}
+
+/*
+ * Global atmospheric layer.
+ * It creates the feeling of being inside the same sky
+ * without forcing every page to use a heavy gradient.
+ */
+
+.imobai-sky-environment {
+  position: relative;
+  isolation: isolate;
+}
+
+.imobai-sky-environment::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  background:
+    radial-gradient(
+      ellipse at 20% 0%,
+      rgba(255, 255, 255, 0.9),
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse at 80% 12%,
+      rgba(198, 222, 236, 0.38),
+      transparent 38%
+    );
+
+  content: "";
+  pointer-events: none;
+}
+
+/* ============================================================
+   SKY SURFACES
+   ============================================================ */
+
+.imobai-surface {
+  border: 1px solid var(--imobai-line);
+
+  background: var(--imobai-surface);
+
+  box-shadow: var(--imobai-shadow);
+
+  backdrop-filter: blur(var(--imobai-blur));
+  -webkit-backdrop-filter: blur(var(--imobai-blur));
+}
+
+.imobai-surface-strong {
+  border: 1px solid var(--imobai-line);
+
+  background: var(--imobai-surface-strong);
+
+  box-shadow: var(--imobai-shadow);
+
+  backdrop-filter: blur(var(--imobai-blur-strong));
+  -webkit-backdrop-filter: blur(var(--imobai-blur-strong));
+}
+
+.imobai-cloud-surface {
+  border: 1px solid rgba(255, 255, 255, 0.62);
+
+  background: var(--imobai-cloud);
+
+  box-shadow:
+    0 18px 60px rgba(41, 75, 95, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.imobai-solid-surface {
+  border: 1px solid var(--imobai-line);
+
+  background: var(--imobai-cloud-solid);
+
+  box-shadow: var(--imobai-shadow);
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.imobai-glass-header {
+  border: 1px solid rgba(255, 255, 255, 0.58);
+
+  background: rgba(255, 255, 255, 0.58);
+
+  box-shadow:
+    0 10px 40px rgba(41, 75, 95, 0.06);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* ============================================================
+   CATALOG / FILTERS
+   ============================================================ */
+
+.imobai-filter-surface {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+
+  background: rgba(255, 255, 255, 0.7);
+
+  box-shadow:
+    0 16px 50px rgba(41, 75, 95, 0.07);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+/* ============================================================
+   EDITORIAL
+   ============================================================ */
+
+.imobai-editorial-hero {
+  position: relative;
+  min-height: 470px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      110deg,
+      rgba(41, 75, 95, 0.82),
+      rgba(49, 90, 115, 0.38),
+      rgba(255, 255, 255, 0.04)
+    );
+
+  box-shadow:
+    0 24px 70px rgba(41, 75, 95, 0.12);
+}
+
+.imobai-editorial-hero h1 {
+  font-family:
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+
+  font-size: clamp(3.5rem, 7vw, 6.5rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+.imobai-editorial-panel {
+  border: 1px solid var(--imobai-line);
+
+  background: rgba(255, 255, 255, 0.76);
+
+  box-shadow:
+    0 14px 40px rgba(41, 75, 95, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* ============================================================
+   TYPOGRAPHY HELPERS
+   ============================================================ */
+
+.imobai-display {
+  font-family:
+    "Cormorant Garamond",
+    Georgia,
+    serif;
+
+  font-weight: 600;
   letter-spacing: -0.035em;
 }
 
-::selection {
-  background: rgba(201, 154, 62, 0.22);
-  color: var(--navy-950);
+.imobai-ui {
+  font-family:
+    "DM Sans",
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
 }
 
-:focus-visible {
-  outline: 3px solid rgba(201, 154, 62, 0.65);
-  outline-offset: 3px;
+.imobai-section-label {
+  color: var(--imobai-sky-deep);
+
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
+
+/* ============================================================
+   BUTTON / INTERACTION LANGUAGE
+   ============================================================ */
 
 button,
 a,
@@ -192,58 +443,45 @@ input,
 textarea,
 select {
   transition:
-    color 180ms var(--ease-premium),
-    background-color 180ms var(--ease-premium),
-    border-color 180ms var(--ease-premium),
-    box-shadow 180ms var(--ease-premium),
-    transform 180ms var(--ease-premium),
-    opacity 180ms var(--ease-premium);
+    color 180ms var(--imobai-ease),
+    background-color 180ms var(--imobai-ease),
+    border-color 180ms var(--imobai-ease),
+    box-shadow 180ms var(--imobai-ease),
+    transform 180ms var(--imobai-ease),
+    opacity 180ms var(--imobai-ease);
 }
 
-.imobai-premium-surface {
-  border: 1px solid var(--line-subtle);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: var(--shadow-card-premium);
-  backdrop-filter: blur(18px);
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
-.imobai-premium-dark {
-  background:
-    radial-gradient(
-      circle at 80% 0%,
-      rgba(201, 154, 62, 0.18),
-      transparent 26rem
-    ),
-    linear-gradient(135deg, var(--navy-900), var(--navy-950));
-  color: white;
+button:active,
+a:active {
+  transform: scale(0.985);
 }
 
-.imobai-gold-line {
-  position: relative;
+:focus-visible {
+  outline: 2px solid var(--imobai-sky);
+  outline-offset: 3px;
 }
 
-.imobai-gold-line::after {
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 42px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--gold-500);
-  content: "";
-}
+/* ============================================================
+   PROPERTY CARDS
+   ============================================================ */
 
 .imobai-card-hover {
   transition:
-    transform 320ms var(--ease-premium),
-    box-shadow 320ms var(--ease-premium),
-    border-color 320ms var(--ease-premium);
+    transform 320ms var(--imobai-ease),
+    box-shadow 320ms var(--imobai-ease),
+    border-color 320ms var(--imobai-ease);
 }
 
 .imobai-card-hover:hover {
-  border-color: rgba(201, 154, 62, 0.32);
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+
+  border-color: var(--imobai-line-strong);
+
+  box-shadow: var(--imobai-shadow-hover);
 }
 
 .imobai-image-hover {
@@ -251,15 +489,22 @@ select {
 }
 
 .imobai-image-hover img {
-  transition: transform 700ms var(--ease-premium);
+  transition:
+    transform 700ms var(--imobai-ease),
+    filter 700ms var(--imobai-ease);
 }
 
 .imobai-image-hover:hover img {
-  transform: scale(1.035);
+  transform: scale(1.025);
 }
 
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
 .imobai-reveal {
-  animation: imobai-reveal 650ms var(--ease-premium) both;
+  animation:
+    imobai-reveal 650ms var(--imobai-ease) both;
 }
 
 .imobai-reveal-delay-1 {
@@ -274,33 +519,10 @@ select {
   animation-delay: 240ms;
 }
 
-.imobai-ai-pulse {
-  animation: imobai-ai-pulse 2.4s ease-in-out infinite;
-}
-
-.imobai-shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.imobai-shimmer::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.32) 45%,
-    transparent 70%
-  );
-  content: "";
-  transform: translateX(-120%);
-  animation: imobai-shimmer 2.8s ease-in-out infinite;
-}
-
 @keyframes imobai-reveal {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(14px);
   }
 
   to {
@@ -309,28 +531,106 @@ select {
   }
 }
 
+/* ============================================================
+   AI
+   ============================================================ */
+
+.imobai-ai-pulse {
+  animation:
+    imobai-ai-pulse 3.6s ease-in-out infinite;
+}
+
 @keyframes imobai-ai-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(201, 154, 62, 0.18);
+    box-shadow:
+      0 0 0 0 rgba(131, 174, 201, 0.18);
   }
 
   50% {
-    box-shadow: 0 0 0 9px rgba(201, 154, 62, 0);
+    box-shadow:
+      0 0 0 8px rgba(131, 174, 201, 0);
   }
 }
 
-@keyframes imobai-shimmer {
-  0%,
-  35% {
-    transform: translateX(-120%);
-  }
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 
-  70%,
-  100% {
-    transform: translateX(120%);
+html {
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(49, 90, 115, 0.22)
+    transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(49, 90, 115, 0.2);
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(49, 90, 115, 0.34);
+}
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
+
+::selection {
+  background: rgba(131, 174, 201, 0.3);
+  color: #173442;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1023px) {
+  .imobai-editorial-hero {
+    min-height: 0;
+
+    background:
+      linear-gradient(
+        135deg,
+        rgba(49, 90, 115, 0.86),
+        rgba(95, 145, 177, 0.55)
+      );
   }
 }
+
+@media (max-width: 640px) {
+  body {
+    background:
+      linear-gradient(
+        180deg,
+        #edf7fc 0%,
+        #f7fafc 48%,
+        #f8fafc 100%
+      );
+  }
+
+  .imobai-card-hover:hover {
+    transform: none;
+    box-shadow: var(--imobai-shadow);
+  }
+
+  .imobai-editorial-hero h1 {
+    font-size: clamp(3rem, 15vw, 4.5rem);
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -340,185 +640,112 @@ select {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
-
-@media (max-width: 640px) {
-  body {
-    background: var(--surface-50);
-  }
-
-  .imobai-card-hover:hover {
-    transform: none;
-  }
-}
-
-/* ============================================================
-   Editorial real-estate layer â€” restrained, human, product-led
-   ============================================================ */
-
-.imobai-app-shell {
-  background: #f7f6f2;
-}
-
-.imobai-editorial-hero {
-  min-height: 470px;
-  background:
-    linear-gradient(90deg, rgba(15, 31, 48, 0.98) 0%, rgba(15, 31, 48, 0.94) 42%, rgba(15, 31, 48, 0.58) 67%, rgba(15, 31, 48, 0.16) 100%),
-    #102033;
-  box-shadow: 0 24px 60px rgba(16, 32, 51, 0.12);
-}
-
-.imobai-editorial-hero h1 {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(3rem, 6vw, 5.25rem);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.94;
-}
-
-.imobai-editorial-panel {
-  border: 1px solid #e3e1db;
-  background: #fffefa;
-  box-shadow: 0 12px 32px rgba(25, 36, 48, 0.045);
-}
-
-.imobai-editorial-panel:hover {
-  border-color: #d8d3c7;
-}
-
-.imobai-card-hover {
-  box-shadow: 0 10px 30px rgba(20, 34, 48, 0.055);
-}
-
-.imobai-card-hover:hover {
-  box-shadow: 0 18px 44px rgba(20, 34, 48, 0.10);
-}
-
-/* Keep the interface quiet: decorative motion should never dominate the content. */
-.imobai-ai-pulse {
-  animation-duration: 3.4s;
-}
-
-@media (max-width: 1023px) {
-  .imobai-editorial-hero {
-    min-height: 0;
-    background: linear-gradient(135deg, #102033, #172e47);
-  }
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-/* Esconde a barra de rolagem, mantendo a rolagem ativa */
-html, body { scrollbar-width: none; -ms-overflow-style: none; }
-html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
-/* Base visual da Ã¡rea inferior do ImobAI */
 
 /* =========================================================
-   Microinterações globais — ImobAI
+   SKY AS INTERFACE — FINAL ENVIRONMENT FIX
    ========================================================= */
 
-html {
-  scroll-behavior: smooth;
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
-button,
-a,
-input,
-textarea,
-select {
-  transition:
-    transform 180ms ease,
-    background-color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    color 180ms ease,
-    opacity 180ms ease;
+body {
+  background:
+    linear-gradient(
+      180deg,
+      #dff3ff 0%,
+      #eef9ff 42%,
+      #f8fcff 100%
+    ) !important;
 }
 
-button:active,
-a:active {
-  transform: scale(0.98);
+.imobai-sky-environment {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background:
+    linear-gradient(
+      180deg,
+      #dff3ff 0%,
+      #eef9ff 48%,
+      #f8fcff 100%
+    ) !important;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  transition:
-    box-shadow 180ms ease,
-    border-color 180ms ease,
-    outline-color 180ms ease;
+.imobai-sky-environment::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% -10%,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.55) 25%,
+      transparent 58%
+    );
 }
 
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
+.imobai-sky-environment canvas {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+.imobai-app-shell {
+  background: transparent !important;
 }
 
-.imobai-card-hover {
-  transition:
-    transform 220ms ease,
-    box-shadow 220ms ease,
-    border-color 220ms ease;
+/* Atmospheric cloud fallback.
+   This remains visible even if WebGL takes a moment to initialize. */
+.imobai-sky-environment::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.72;
+  background:
+    radial-gradient(
+      ellipse 32% 13% at 12% 25%,
+      rgba(255,255,255,0.88) 0%,
+      rgba(255,255,255,0.48) 42%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 27% 12% at 42% 15%,
+      rgba(255,255,255,0.82) 0%,
+      rgba(255,255,255,0.40) 44%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 36% 15% at 78% 31%,
+      rgba(255,255,255,0.84) 0%,
+      rgba(255,255,255,0.42) 45%,
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 30% 12% at 58% 58%,
+      rgba(255,255,255,0.64) 0%,
+      rgba(255,255,255,0.26) 46%,
+      transparent 74%
+    );
 }
 
-.imobai-card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 36px rgba(47, 111, 159, 0.10);
+.imobai-sky-environment > .relative.z-10 {
+  position: relative;
+  z-index: 10;
 }
-
-::selection {
-  background: rgba(47, 111, 159, 0.18);
-}
-
-
-/* Product-wide refinement: calm surfaces, intentional focus and responsive rhythm. */
-@layer components {
-  .imobai-glass-header {
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.72);
-    box-shadow: 0 12px 34px rgba(16, 32, 51, 0.09);
-    backdrop-filter: blur(18px);
-  }
-  .imobai-filter-surface {
-    border: 1px solid rgba(255, 255, 255, 0.62);
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow: 0 18px 52px rgba(16, 32, 51, 0.08);
-    backdrop-filter: blur(18px);
-  }
-  .imobai-section-label { color: var(--gold-500); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
-}
-@media (max-width: 640px) {
-  .imobai-card-hover:hover { transform: none; box-shadow: var(--shadow-card-premium); }
-}
-
-
-/* Global cloud environment and restrained premium surface system. */
-:root {
-  --imobai-atmosphere: rgba(247, 250, 252, 0.78);
-  --imobai-glass: rgba(255, 255, 255, 0.76);
-  --imobai-solid: rgba(255, 255, 255, 0.94);
-  --imobai-shadow-soft: 0 18px 52px rgba(16, 32, 51, 0.08);
-}
-.imobai-solid-surface { background: var(--imobai-solid); box-shadow: var(--imobai-shadow-soft); }
-@media (prefers-reduced-motion: reduce) { .imobai-card-hover:hover { transform: none !important; } }
-
