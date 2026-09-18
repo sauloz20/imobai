@@ -1,4 +1,4 @@
-﻿import { Building2, Menu, Plus, Search, UserRound } from "lucide-react";
+﻿import { Building2, Menu, Plus, UserRound } from "lucide-react";
 import { Link } from "wouter";
 
 export type GlobalHeaderProps = {
@@ -15,7 +15,7 @@ export function GlobalHeader({
   onProfile,
 }: GlobalHeaderProps) {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 px-4 pt-5 sm:px-8 drop-shadow-[0_3px_12px_rgba(15,45,65,0.18)]">
+    <header className="fixed inset-x-0 top-0 z-[90] px-4 pt-5 sm:px-8 drop-shadow-[0_3px_12px_rgba(15,45,65,0.18)]">
       <div className="mx-auto flex h-14 max-w-[1380px] items-center justify-between">
         {/* Logo */}
         <Link
@@ -37,26 +37,6 @@ export function GlobalHeader({
           className="hidden items-center gap-1 md:flex"
           aria-label="NavegaÃ§Ã£o principal"
         >
-          <Link
-            href="/catalogo"
-            className="rounded-lg px-3 py-2 text-[12px] font-semibold text-[#526577] transition-colors hover:text-[#102033]"
-          >
-            Explorar imÃ³veis
-          </Link>
-
-          <Link
-            href="/#ai-chat"
-            className="rounded-lg px-3 py-2 text-[12px] font-semibold text-[#526577] transition-colors hover:text-[#102033]"
-          >
-            Concierge IA
-          </Link>
-
-          <Link
-            href="/#pricing"
-            className="rounded-lg px-3 py-2 text-[12px] font-semibold text-[#526577] transition-colors hover:text-[#102033]"
-          >
-            PrecificaÃ§Ã£o
-          </Link>
         </nav>
 
         {/* AÃ§Ãµes */}
@@ -79,14 +59,6 @@ export function GlobalHeader({
               Entrar
             </button>
           )}
-
-          <Link
-            href="/catalogo"
-            className="hidden items-center gap-1.5 text-[12px] font-semibold text-[#40536a] transition-colors hover:text-[#102033] lg:flex"
-          >
-            <Search size={14} />
-            Buscar
-          </Link>
 
           {/* Menu */}
           <button
@@ -115,4 +87,9 @@ export function PublishPill({ onClick }: { onClick?: () => void }) {
     </button>
   );
 }
+
+
+
+
+
 

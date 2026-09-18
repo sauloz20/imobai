@@ -97,9 +97,7 @@ const navItems = [
   { label: "Visão geral", icon: BarChart3, target: "overview" },
   { label: "Busca inteligente", icon: Search, target: "search" },
   { label: "Catálogo", icon: Building2, target: "catalog" },
-  { label: "Precificação", icon: CircleDollarSign, target: "pricing" },
   { label: "Minhas negociações", icon: MessageSquareText, target: "inbox" },
-  { label: "Concierge Qwen", icon: Bot, target: "ai-chat" },
 ];
 
 export default function Home() {
@@ -413,7 +411,16 @@ export default function Home() {
   return (
     <SkyEnvironment intensity="strong" className="min-h-screen">
       <div className="imobai-app-shell relative min-h-screen text-[#102033]">
-      <GlobalHeader onMenu={() => setMobileNavOpen(true)} />
+      {!mobileNavOpen && (
+        <GlobalHeader
+          onLogin={() => {
+            setAuthMode("login");
+            setAuthOpen(true);
+          }}
+          onMenu={() => setMobileNavOpen(true)}
+          onProfile={() => setProfileOpen(true)}
+        />
+      )}
       {/* ================= AppShell ================= */}
       <aside className={`fixed inset-y-0 left-0 z-40 hidden w-[254px] flex-col border-r border-[#172c45] bg-[#102033] text-white transition-transform duration-200 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-[84px] items-center border-b border-white/10 px-6">
@@ -432,8 +439,7 @@ export default function Home() {
           <button type="button" onClick={() => (auth.data ? setProfileOpen(true) : (setAuthMode("login"), setAuthOpen(true)))} className="flex w-full items-center gap-3 border-t border-white/10 pt-4 text-left transition hover:opacity-90"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dbe8f5] text-[12px] font-bold text-[#0b1f3a]">{(auth.data?.name || auth.data?.email || "U").trim().slice(0, 2).toUpperCase()}</div><div className="min-w-0"><div className="truncate text-[12px] font-semibold">{auth.data?.name || auth.data?.email || "Usuário"}</div><div className="truncate text-[11px] text-white/40">{auth.data ? "Meu perfil · sessão ativa" : "Entrar na minha conta"}</div></div><ChevronRight size={15} className="ml-auto text-white/30" /></button>
         </div>
       </aside>
-      {mobileNavOpen && <button className="fixed inset-0 z-30 bg-[#071426]/50 lg:hidden" onClick={() => setMobileNavOpen(false)} aria-label="Fechar menu" />}
-<main className="relative z-10">
+      <main className="relative z-10">
         {mobileNavOpen && (
   <div className="fixed inset-0 z-[100]">
     <button
@@ -443,7 +449,7 @@ export default function Home() {
       className="absolute inset-0 bg-[#123b5d]/20 backdrop-blur-[2px]"
     />
 
-    <aside className="absolute right-0 top-0 flex h-full w-[330px] max-w-[88vw] flex-col bg-white shadow-[-12px_0_40px_rgba(18,59,93,0.16)]">
+    <aside className="absolute right-0 top-0 bottom-0 z-[110] flex w-[330px] max-w-[88vw] flex-col bg-white shadow-[-12px_0_40px_rgba(18,59,93,0.16)]">
 
       <div className="flex h-[76px] items-center justify-between border-b border-[#e7eff4] px-6">
         <div>
@@ -492,15 +498,6 @@ export default function Home() {
         >
           <Tags size={18} />
           Alugar imóveis
-        </a>
-
-        <a
-          href="/catalogo"
-          onClick={() => setMobileNavOpen(false)}
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] font-medium text-[#526577] transition hover:bg-[#f1f6fa] hover:text-[#2f6f9f]"
-        >
-          <Compass size={18} />
-          Explorar imóveis
         </a>
 
         <div className="my-4 h-px bg-[#e7eff4]" />
@@ -613,7 +610,7 @@ export default function Home() {
           {/* ================= Hero principal ================= */}
           <section
             id="overview"
-            className="relative flex min-h-[680px] items-center justify-center overflow-hidden rounded-b-[42px] px-5 py-24 text-center sm:px-8 lg:min-h-[720px]"
+            className="relative flex min-h-[calc(100vh-72px)] items-center justify-center overflow-hidden rounded-b-[42px] px-5 py-24 text-center sm:px-8 lg:min-h-[calc(100vh-72px)]"
           ><div className="relative z-10 mx-auto w-full max-w-[1050px]">
 
               <h1
@@ -830,6 +827,22 @@ function Field({ label, children, className = "", dark = false }: { label: strin
 function MarketBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   return <div><div className="mb-1.5 flex items-center justify-between text-[11px]"><span className="font-medium text-[#596c80]">{label}</span><span className="font-semibold text-[#314861]">{money(value)}/m²</span></div><div className="h-2 overflow-hidden rounded-full bg-[#edf1f5]"><div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((value / max) * 100))}%`, backgroundColor: color }} /></div></div>;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
