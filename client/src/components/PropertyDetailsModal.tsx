@@ -1,4 +1,4 @@
-import { PremiumImage } from "@/components/PremiumImage";
+﻿import { PremiumImage } from "@/components/PremiumImage";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { formatBRL, getPropertyImage, getPropertyPrice, getPropertyTitle } from "@/lib/property";
@@ -77,7 +77,7 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
     { icon: BedDouble, label: "Quartos", value: String(property.quartos ?? 0) },
     { icon: Bath, label: "Banheiros", value: String(property.banheiros ?? 0) },
     { icon: Car, label: "Vagas", value: String(property.vagas ?? 0) },
-    { icon: Ruler, label: "Área", value: `${Number(property.areaM2 ?? 0).toLocaleString("pt-BR")} m²` },
+    { icon: Ruler, label: "Ãrea", value: `${Number(property.areaM2 ?? 0).toLocaleString("pt-BR")} mÂ²` },
   ];
 
   const structured = [
@@ -98,16 +98,18 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
         className="imobai-reveal relative flex max-h-[92vh] w-full max-w-[920px] flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--shadow-modal-premium)] sm:rounded-[24px]"
         onClick={event => event.stopPropagation()}
       >
+                <button
+          onClick={onClose}
+          type="button"
+          aria-label="Fechar detalhes"
+          className="absolute right-4 top-4 z-[100] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#071426]/85 text-white shadow-xl backdrop-blur-sm transition hover:bg-[#071426] active:scale-95"
+        >
+          <X size={18} strokeWidth={2.5} />
+        </button>
+
         {/* Galeria */}
         <div className="relative aspect-[16/10] w-full shrink-0 bg-[#22384f] sm:aspect-[16/8]">
           <PremiumImage src={currentImage} alt={title} className="h-full w-full" eager />
-          <button
-            onClick={onClose}
-            aria-label="Fechar detalhes"
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#071426]/60 text-white backdrop-blur-sm transition hover:bg-[#071426]/80"
-          >
-            <X size={17} />
-          </button>
           {gallery.length > 1 && (
             <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-[#071426]/55 px-2.5 py-1.5 backdrop-blur-sm">
               {gallery.map((image, index) => (
@@ -131,7 +133,7 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
           )}
         </div>
 
-        {/* Conteúdo */}
+        {/* ConteÃºdo */}
         <div className="overflow-y-auto p-5 sm:p-7">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
             <div className="min-w-0">
@@ -148,7 +150,7 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
               <div className="text-[24px] font-semibold tracking-[-0.03em] text-[#102033]">{price.primary}</div>
               <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#656e79]">{price.label}</div>
               {price.sale !== null && price.rent !== null && price.rent > 0 && (
-                <div className="mt-1 text-[11px] text-[#616e81]">Também para aluguel: {formatBRL(price.rent)}/mês</div>
+                <div className="mt-1 text-[11px] text-[#616e81]">TambÃ©m para aluguel: {formatBRL(price.rent)}/mÃªs</div>
               )}
             </div>
           </div>
@@ -165,7 +167,7 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
 
           {(description || technical) && (
             <div className="mt-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#656e79]">Sobre o imóvel</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#656e79]">Sobre o imÃ³vel</h3>
               <p className="mt-2 whitespace-pre-line text-[13.5px] leading-6 text-[#40536a]">{description}</p>
               {technical && <p className="mt-3 whitespace-pre-line text-[12.5px] leading-5 text-[#616e81]">{technical}</p>}
             </div>
@@ -192,7 +194,7 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
 
           {similar.length > 0 && (
             <div className="mt-7 border-t border-[#eef2f6] pt-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#656e79]">Imóveis semelhantes</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#656e79]">ImÃ³veis semelhantes</h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {similar.slice(0, 3).map(item => (
                   <PropertyCard
@@ -259,3 +261,4 @@ function NegotiationCTA({
     </div>
   );
 }
+

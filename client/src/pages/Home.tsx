@@ -1,4 +1,5 @@
-﻿import { SkyEnvironment } from "@/components/SkyEnvironment";
+﻿import { Footer } from "@/components/Footer";
+import { SkyEnvironment } from "@/components/SkyEnvironment";
 import { GlobalHeader } from "@/components/GlobalHeader";
 import { AuthModal } from "@/components/AuthModal";
 import { ConfirmDeleteDialog, ProfileModal } from "@/components/ProfileModal";
@@ -777,6 +778,8 @@ export default function Home() {
         onSelectSimilar={item => setDetailsProperty(item as DetailProperty)}
       />
       </div>
+
+      <Footer />
     </SkyEnvironment>
   );
 }
@@ -827,6 +830,9 @@ function Field({ label, children, className = "", dark = false }: { label: strin
 function MarketBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   return <div><div className="mb-1.5 flex items-center justify-between text-[11px]"><span className="font-medium text-[#596c80]">{label}</span><span className="font-semibold text-[#314861]">{money(value)}/m²</span></div><div className="h-2 overflow-hidden rounded-full bg-[#edf1f5]"><div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((value / max) * 100))}%`, backgroundColor: color }} /></div></div>;
 }
+
+
+
 
 
 
