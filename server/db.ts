@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gt, gte, inArray, lte, or } from "drizzle-orm";
+﻿import { and, asc, count, eq, gt, gte, inArray, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
@@ -53,7 +53,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2048",
     tipo: "Apartamento",
     bairro: "Pinheiros",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 3,
     banheiros: 2,
     vagas: 2,
@@ -64,7 +64,7 @@ const demoProperties: DemoProperty[] = [
     valorVenda: "1180000.00",
     valorAluguel: "7400.00",
     descricaoTecnica: "Planta inteligente, varanda integrada e marcenaria planejada.",
-    descricaoIa: "Um apartamento luminoso em Pinheiros para viver a cidade com mais espaço e leveza.",
+    descricaoIa: "Um apartamento luminoso em Pinheiros para viver a cidade com mais espaÃ§o e leveza.",
     tituloAnuncio: "Luz natural e varanda generosa em Pinheiros",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-01_f5822bf0.jpg",
@@ -76,7 +76,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-1972",
     tipo: "Cobertura",
     bairro: "Vila Madalena",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 4,
     banheiros: 4,
     vagas: 3,
@@ -86,8 +86,8 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "2480000.00",
     valorAluguel: "14500.00",
-    descricaoTecnica: "Cobertura duplex com terraço, churrasqueira e vista aberta.",
-    descricaoIa: "Seu refúgio urbano com terraço ensolarado, ambientes amplos e vista para o skyline.",
+    descricaoTecnica: "Cobertura duplex com terraÃ§o, churrasqueira e vista aberta.",
+    descricaoIa: "Seu refÃºgio urbano com terraÃ§o ensolarado, ambientes amplos e vista para o skyline.",
     tituloAnuncio: "Cobertura duplex com vista aberta na Vila Madalena",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-02_ac324e1e.jpg",
@@ -99,7 +99,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2110",
     tipo: "Apartamento",
     bairro: "Moema",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 2,
     banheiros: 2,
     vagas: 1,
@@ -109,7 +109,7 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "890000.00",
     valorAluguel: "5600.00",
-    descricaoTecnica: "Próximo ao parque, com varanda e iluminação cruzada.",
+    descricaoTecnica: "PrÃ³ximo ao parque, com varanda e iluminaÃ§Ã£o cruzada.",
     descricaoIa: "A praticidade de Moema em uma planta acolhedora, com luz natural em todos os ambientes.",
     tituloAnuncio: "Apartamento iluminado a poucos minutos do parque",
     status: "Disponivel",
@@ -122,7 +122,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2016",
     tipo: "Casa",
     bairro: "Alto de Pinheiros",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 4,
     banheiros: 4,
     vagas: 3,
@@ -132,8 +132,8 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "3250000.00",
     valorAluguel: "18200.00",
-    descricaoTecnica: "Casa térrea com jardim, home office e área gourmet.",
-    descricaoIa: "Espaçoo, verde e privacidade para uma rotina com mais tempo de qualidade.",
+    descricaoTecnica: "Casa tÃ©rrea com jardim, home office e Ã¡rea gourmet.",
+    descricaoIa: "EspaÃ§oo, verde e privacidade para uma rotina com mais tempo de qualidade.",
     tituloAnuncio: "Casa com jardim e arquitetura acolhedora no Alto de Pinheiros",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-01_f5822bf0.jpg",
@@ -145,7 +145,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2093",
     tipo: "Apartamento",
     bairro: "Itaim Bibi",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 3,
     banheiros: 3,
     vagas: 2,
@@ -155,9 +155,9 @@ const demoProperties: DemoProperty[] = [
     ensolarado: false,
     valorVenda: "1670000.00",
     valorAluguel: "9900.00",
-    descricaoTecnica: "Condomínio completo, sala ampla e varanda gourmet.",
-    descricaoIa: "Entre restaurantes e escritórios, um endereço que simplifica seus dias.",
-    tituloAnuncio: "Varanda gourmet e localização premium no Itaim",
+    descricaoTecnica: "CondomÃ­nio completo, sala ampla e varanda gourmet.",
+    descricaoIa: "Entre restaurantes e escritÃ³rios, um endereÃ§o que simplifica seus dias.",
+    tituloAnuncio: "Varanda gourmet e localizaÃ§Ã£o premium no Itaim",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-02_ac324e1e.jpg",
     dataCadastro: new Date("2026-07-28T12:00:00Z"),
@@ -167,8 +167,8 @@ const demoProperties: DemoProperty[] = [
     ownerId: null,
     codigo: "IMB-1884",
     tipo: "Sobrado",
-    bairro: "Saúde",
-    cidade: "São Paulo",
+    bairro: "SaÃºde",
+    cidade: "SÃ£o Paulo",
     quartos: 3,
     banheiros: 2,
     vagas: 2,
@@ -179,8 +179,8 @@ const demoProperties: DemoProperty[] = [
     valorVenda: "1120000.00",
     valorAluguel: "6300.00",
     descricaoTecnica: "Sobrado reformado, quintal e duas vagas cobertas.",
-    descricaoIa: "Uma casa pronta para receber, com quintal para pets e uma vizinhança tranquila.",
-    tituloAnuncio: "Sobrado reformado com quintal na Saúde",
+    descricaoIa: "Uma casa pronta para receber, com quintal para pets e uma vizinhanÃ§a tranquila.",
+    tituloAnuncio: "Sobrado reformado com quintal na SaÃºde",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-03_c1989a3b.jpg",
     dataCadastro: new Date("2026-07-18T12:00:00Z"),
@@ -191,7 +191,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2041",
     tipo: "Apartamento",
     bairro: "Perdizes",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 3,
     banheiros: 2,
     vagas: 2,
@@ -201,7 +201,7 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "1260000.00",
     valorAluguel: "7600.00",
-    descricaoTecnica: "Andar alto, varanda e condomínio com lazer completo.",
+    descricaoTecnica: "Andar alto, varanda e condomÃ­nio com lazer completo.",
     descricaoIa: "Conforto e praticidade em um bairro que equilibra tranquilidade e mobilidade.",
     tituloAnuncio: "Andar alto com varanda e lazer completo em Perdizes",
     status: "Disponivel",
@@ -214,7 +214,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-1999",
     tipo: "Cobertura",
     bairro: "Jardins",
-    cidade: "São Paulo",
+    cidade: "SÃ£o Paulo",
     quartos: 3,
     banheiros: 3,
     vagas: 2,
@@ -225,7 +225,7 @@ const demoProperties: DemoProperty[] = [
     valorVenda: "2790000.00",
     valorAluguel: "15800.00",
     descricaoTecnica: "Cobertura com rooftop privativo e acabamentos sofisticados.",
-    descricaoIa: "Uma cobertura autoral para quem busca design, privacidade e a melhor versão dos Jardins.",
+    descricaoIa: "Uma cobertura autoral para quem busca design, privacidade e a melhor versÃ£o dos Jardins.",
     tituloAnuncio: "Rooftop privativo e design autoral nos Jardins",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-02_ac324e1e.jpg",
@@ -318,15 +318,15 @@ export async function listProperties(
 
   if (!db) {
     if (isDemoMode) return filterDemoProperties(filters);
-    throw new Error("Banco de dados indisponível");
+    throw new Error("Banco de dados indisponÃ­vel");
   }
 
   try {
     const conditions = [eq(imoveis.status, "Disponivel")];
 
-    // Finalidade não é uma coluna: um imóvel "está para" venda se tem valor de venda,
+    // Finalidade nÃ£o Ã© uma coluna: um imÃ³vel "estÃ¡ para" venda se tem valor de venda,
     // e para aluguel se tem valor de aluguel. Sem isso, "quero alugar" retornaria
-    // também imóveis que só têm preço de venda.
+    // tambÃ©m imÃ³veis que sÃ³ tÃªm preÃ§o de venda.
     if (filters.finalidade === "compra") {
       conditions.push(gt(imoveis.valorVenda, "0"));
     }
@@ -388,12 +388,41 @@ export async function listProperties(
     const limit = Math.max(1, Math.min(filters.limit ?? 100, 500));
     const offset = Math.max(0, filters.offset ?? 0);
 
-    return await db
+    const properties = await db
       .select()
       .from(imoveis)
       .where(and(...conditions))
       .limit(limit)
       .offset(offset);
+
+    if (!properties.length) return [];
+
+    const photos = await db
+      .select()
+      .from(imovelFotos)
+      .where(
+        inArray(
+          imovelFotos.imovelId,
+          properties.map(property => property.id)
+        )
+      )
+      .orderBy(
+        asc(imovelFotos.ordem),
+        asc(imovelFotos.id)
+      );
+
+    const photosByProperty = new Map<number, typeof photos>();
+
+    for (const photo of photos) {
+      const current = photosByProperty.get(photo.imovelId) ?? [];
+      current.push(photo);
+      photosByProperty.set(photo.imovelId, current);
+    }
+
+    return properties.map(property => ({
+      ...property,
+      fotos: photosByProperty.get(property.id) ?? [],
+    }));
   } catch (error) {
     console.warn("[Database] Property query failed:", error);
 
@@ -402,7 +431,6 @@ export async function listProperties(
     throw error;
   }
 }
-
 function filterDemoProperties(filters: PropertyFilters) {
   return demoProperties.filter(property => {
     if (filters.finalidade === "compra" && !(Number(property.valorVenda) > 0)) return false;
@@ -461,12 +489,12 @@ export async function getDashboardData() {
     } catch {
       if (!isDemoMode) {
         throw new Error(
-          "Não foi possível carregar as métricas do dashboard"
+          "NÃ£o foi possÃ­vel carregar as mÃ©tricas do dashboard"
         );
       }
     }
   } else if (!isDemoMode) {
-    throw new Error("Banco de dados indisponível");
+    throw new Error("Banco de dados indisponÃ­vel");
   }
 
   const active = properties.filter(
@@ -588,7 +616,7 @@ function hashSessionToken(token: string) {
 export async function getUserByEmail(email: string) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
   const result = await db
     .select()
@@ -606,14 +634,14 @@ export async function createLocalUser(input: {
 }) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
   const email = input.email.trim().toLowerCase();
 
   const existing = await getUserByEmail(email);
 
   if (existing) {
-    throw new Error("Este email já está cadastrado");
+    throw new Error("Este email jÃ¡ estÃ¡ cadastrado");
   }
 
   const openId = `local_${nanoid(24)}`;
@@ -629,7 +657,7 @@ export async function createLocalUser(input: {
   const userId = createdUser?.id;
 
   if (!userId) {
-    throw new Error("Não foi possível criar a conta");
+    throw new Error("NÃ£o foi possÃ­vel criar a conta");
   }
 
   const user = await db
@@ -639,7 +667,7 @@ export async function createLocalUser(input: {
     .limit(1);
 
   if (!user[0]) {
-    throw new Error("Não foi possível criar a conta");
+    throw new Error("NÃ£o foi possÃ­vel criar a conta");
   }
 
   return user[0];
@@ -651,12 +679,12 @@ export async function updateUserProfile(
 ) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
   if (input.email) {
     const existing = await getUserByEmail(input.email);
     if (existing && existing.id !== userId) {
-      throw new Error("Este email já está em uso por outra conta");
+      throw new Error("Este email jÃ¡ estÃ¡ em uso por outra conta");
     }
   }
 
@@ -670,7 +698,7 @@ export async function updateUserProfile(
     .where(eq(users.id, userId))
     .returning();
 
-  if (!updated) throw new Error("Usuário não encontrado");
+  if (!updated) throw new Error("UsuÃ¡rio nÃ£o encontrado");
 
   return updated;
 }
@@ -696,7 +724,7 @@ export async function verifyLocalCredentials(
 export async function createLocalSession(userId: number) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
   const token = randomBytes(32).toString("hex");
 
@@ -778,7 +806,7 @@ export async function createPropertyForUser(
 ) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
   const codigo = `IMB-${nanoid(7).toUpperCase()}`;
 
@@ -807,9 +835,9 @@ export async function updatePropertyForUser(
 ) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
-  // A cláusula ownerId garante que só o dono edita o imóvel.
+  // A clÃ¡usula ownerId garante que sÃ³ o dono edita o imÃ³vel.
   const [updated] = await db
     .update(imoveis)
     .set(input)
@@ -817,7 +845,7 @@ export async function updatePropertyForUser(
     .returning({ id: imoveis.id });
 
   if (!updated?.id) {
-    throw new Error("Imóvel não encontrado ou sem permissão para editar");
+    throw new Error("ImÃ³vel nÃ£o encontrado ou sem permissÃ£o para editar");
   }
 
   const created = await db
@@ -832,9 +860,9 @@ export async function updatePropertyForUser(
 export async function deletePropertyForUser(userId: number, propertyId: number) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponível");
+  if (!db) throw new Error("Banco de dados indisponÃ­vel");
 
-  // Fotos são removidas primeiro (para coletar os fileKeys antes do cascade).
+  // Fotos sÃ£o removidas primeiro (para coletar os fileKeys antes do cascade).
   const photos = await db
     .select({ fileKey: imovelFotos.fileKey })
     .from(imovelFotos)
@@ -846,10 +874,10 @@ export async function deletePropertyForUser(userId: number, propertyId: number) 
     .returning({ id: imoveis.id });
 
   if (!deleted?.id) {
-    throw new Error("Imóvel não encontrado ou sem permissão para excluir");
+    throw new Error("ImÃ³vel nÃ£o encontrado ou sem permissÃ£o para excluir");
   }
 
-  // Com o imóvel excluído (fotos têm FK cascade), remove os arquivos do storage.
+  // Com o imÃ³vel excluÃ­do (fotos tÃªm FK cascade), remove os arquivos do storage.
   for (const photo of photos) {
     try {
       await storageRemove(photo.fileKey);
@@ -928,7 +956,7 @@ export async function addPropertyPhotos(
   const db = await getDb();
 
   if (!db) {
-    throw new Error("Banco de dados indisponível");
+    throw new Error("Banco de dados indisponÃ­vel");
   }
 
   const property = await db
@@ -944,7 +972,7 @@ export async function addPropertyPhotos(
 
   if (!property[0]) {
     throw new Error(
-      "Imóvel não encontrado ou sem permissão"
+      "ImÃ³vel nÃ£o encontrado ou sem permissÃ£o"
     );
   }
 
@@ -957,7 +985,7 @@ export async function addPropertyPhotos(
 
   if (existing.length + photos.length > 20) {
     throw new Error(
-      "Cada anúncio pode ter no máximo 20 fotos"
+      "Cada anÃºncio pode ter no mÃ¡ximo 20 fotos"
     );
   }
 
@@ -1011,7 +1039,7 @@ export async function getConversation(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponível"
+      "Banco de dados indisponÃ­vel"
     );
   }
 
@@ -1072,7 +1100,7 @@ export async function createConversation(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponível"
+      "Banco de dados indisponÃ­vel"
     );
   }
 
@@ -1108,7 +1136,7 @@ export async function createConversation(
       .returning({ id: conversas.id });
 
     if (!createdConversation?.id) {
-      throw new Error("Não foi possível criar a conversa");
+      throw new Error("NÃ£o foi possÃ­vel criar a conversa");
     }
 
     const created = await db
@@ -1159,7 +1187,7 @@ export async function listMessages(
 
   if (!conversation) {
     throw new Error(
-      "Conversa não encontrada"
+      "Conversa nÃ£o encontrada"
     );
   }
 
@@ -1209,7 +1237,7 @@ export async function createMessage(
 
   if (!conversation) {
     throw new Error(
-      "Conversa não encontrada"
+      "Conversa nÃ£o encontrada"
     );
   }
 
@@ -1217,7 +1245,7 @@ export async function createMessage(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponível"
+      "Banco de dados indisponÃ­vel"
     );
   }
 
@@ -1246,7 +1274,7 @@ export async function getOrCreateAiChat(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponível"
+      "Banco de dados indisponÃ­vel"
     );
   }
 
@@ -1373,7 +1401,7 @@ export async function createAiMessage(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponível"
+      "Banco de dados indisponÃ­vel"
     );
   }
 
@@ -1395,6 +1423,8 @@ export async function createAiMessage(
 
   return created[0];
 }
+
+
 
 
 

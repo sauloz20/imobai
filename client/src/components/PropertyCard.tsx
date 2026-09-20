@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { PremiumImage } from "@/components/PremiumImage";
 import {
   formatBRL,
@@ -25,12 +25,12 @@ export type PropertyCardProps = {
     recommended?: boolean;
     onNegotiate?: (property: PropertyLike) => void;
   };
-  /** Ações do proprietário (cartão em "Meus imóveis"). */
+  /** AÃ§Ãµes do proprietÃ¡rio (cartÃ£o em "Meus imÃ³veis"). */
   onEdit?: (property: PropertyCardProps["property"]) => void;
   onDelete?: (property: PropertyCardProps["property"]) => void;
   hideFavorite?: boolean;
   layout?: "vertical" | "horizontal";
-  /** Contexto de modalidade (catálogo filtrado): ajusta qual preço exibir. */
+  /** Contexto de modalidade (catÃ¡logo filtrado): ajusta qual preÃ§o exibir. */
   priceContext?: "venda" | "aluguel";
   onOpenDetails?: (property: PropertyCardProps["property"]) => void;
   className?: string;
@@ -87,7 +87,7 @@ function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenD
         />
         <div className="absolute left-3 top-3 flex max-w-[85%] flex-wrap gap-1.5">
           <span className="rounded-full bg-[#0b1f3a]/85 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
-            {property.tipo ?? "Imóvel"}
+            {property.tipo ?? "ImÃ³vel"}
           </span>
           {price.modality === "aluguel" && (
             <span className="rounded-full bg-[#2b6e9e]/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
@@ -133,7 +133,7 @@ function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenD
           {property.codigo && <span className="ml-auto hidden shrink-0 text-[10px] text-[#a7b2c0] sm:inline">{property.codigo}</span>}
         </p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-[#40536a]" aria-label="Atributos do imóvel">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-[#40536a]" aria-label="Atributos do imÃ³vel">
           <span className="flex items-center gap-1.5">
             <BedDouble size={14} className="text-[#656e79]" aria-hidden />
             {property.quartos ?? 0} {Number(property.quartos) === 1 ? "quarto" : "quartos"}
@@ -148,7 +148,7 @@ function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenD
           </span>
           <span className="flex items-center gap-1.5">
             <Maximize2 size={13} className="text-[#656e79]" aria-hidden />
-            {area ? `${area.toLocaleString("pt-BR")} m²` : "—"}
+            {area ? `${area.toLocaleString("pt-BR")} mÂ²` : "â€”"}
           </span>
         </div>
 
@@ -233,3 +233,4 @@ function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenD
 }
 
 export const PropertyCard = memo(PropertyCardBase);
+

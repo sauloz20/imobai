@@ -3,7 +3,20 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { formatBRL, getPropertyImage, getPropertyPrice, getPropertyTitle } from "@/lib/property";
 import { cn } from "@/lib/utils";
-import { Bath, BedDouble, Car, CheckCircle2, Heart, Loader2, MapPin, MessageSquareText, Ruler, Sun, X } from "lucide-react";
+import {
+  Bath,
+  BedDouble,
+  Car,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Loader2,
+  MapPin,
+  MessageSquareText,
+  Ruler,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 export type DetailProperty = {
@@ -64,11 +77,22 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
 
   const price = getPropertyPrice(property);
   const mainImage = getPropertyImage(property);
-  const gallery = [
-    ...(mainImage ? [mainImage] : []),
-    ...(property.fotos ?? []).map(photo => photo.url).filter(Boolean),
-  ] as string[];
+  const gallery = Array.from(
+    new Set([
+      ...(mainImage ? [mainImage] : []),
+      ...(property.fotos ?? []).map(photo => photo.url).filter(Boolean),
+    ])
+  );
+
   const currentImage = gallery[galleryIndex] ?? null;
+
+  const goToPreviousImage = () => {
+    setGalleryIndex(current => (current - 1 + gallery.length) % gallery.length);
+  };
+
+  const goToNextImage = () => {
+    setGalleryIndex(current => (current + 1) % gallery.length);
+  };
   const title = getPropertyTitle(property);
   const description = property.descricaoIa || property.descricaoTecnica;
   const technical = property.descricaoTecnica && property.descricaoTecnica !== description ? property.descricaoTecnica : null;
@@ -108,32 +132,67 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
         </button>
 
         {/* Galeria */}
-        <div className="relative aspect-[16/10] w-full shrink-0 bg-[#22384f] sm:aspect-[16/8]">
-          <PremiumImage src={currentImage} alt={title} className="h-full w-full" eager />
+        <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#22384f] sm:aspect-[16/8]">
+          <PremiumImage
+            src={currentImage}
+            alt={`${title} — foto ${galleryIndex + 1} de ${gallery.length}`}
+            className="h-full w-full"
+            eager
+          />
+
           {gallery.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-[#071426]/55 px-2.5 py-1.5 backdrop-blur-sm">
-              {gallery.map((image, index) => (
-                <button
-                  key={`${image}-${index}`}
-                  onClick={() => setGalleryIndex(index)}
-                  aria-label={`Ver foto ${index + 1} de ${gallery.length}`}
-                  aria-current={index === galleryIndex}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all",
-                    index === galleryIndex ? "w-6 bg-[#e7c984]" : "w-1.5 bg-white/50 hover:bg-white/80"
-                  )}
-                />
-              ))}
-            </div>
+            <>
+              <button
+                type="button"
+                onClick={goToPreviousImage}
+                aria-label="Imagem anterior"
+                className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#071426]/70 text-white shadow-lg backdrop-blur-sm transition hover:bg-[#071426]/90 active:scale-95 sm:left-5"
+              >
+                <ChevronLeft size={22} strokeWidth={2.5} />
+              </button>
+
+              <button
+                type="button"
+                onClick={goToNextImage}
+                aria-label="Próxima imagem"
+                className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#071426]/70 text-white shadow-lg backdrop-blur-sm transition hover:bg-[#071426]/90 active:scale-95 sm:right-5"
+              >
+                <ChevronRight size={22} strokeWidth={2.5} />
+              </button>
+
+              <div
+                className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#071426]/60 px-3 py-2 backdrop-blur-sm"
+                aria-label={`Foto ${galleryIndex + 1} de ${gallery.length}`}
+              >
+                {gallery.map((image, index) => (
+                  <button
+                    key={`${image}-${index}`}
+                    type="button"
+                    onClick={() => setGalleryIndex(index)}
+                    aria-label={`Ver foto ${index + 1} de ${gallery.length}`}
+                    aria-current={index === galleryIndex}
+                    className={cn(
+                      "rounded-full transition-all duration-200",
+                      index === galleryIndex
+                        ? "h-1.5 w-6 bg-[#e7c984]"
+                        : "h-1.5 w-1.5 bg-white/55 hover:bg-white/90"
+                    )}
+                  />
+                ))}
+              </div>
+
+              <div className="absolute right-3 top-3 z-20 rounded-full bg-[#071426]/60 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur-sm">
+                {galleryIndex + 1} / {gallery.length}
+              </div>
+            </>
           )}
+
           {price.modality === "aluguel" && (
             <span className="absolute left-4 top-4 rounded-full bg-[#2b6e9e] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white">
               Aluguel
             </span>
           )}
         </div>
-
-        {/* ConteÃºdo */}
         <div className="overflow-y-auto p-5 sm:p-7">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
             <div className="min-w-0">
@@ -261,4 +320,8 @@ function NegotiationCTA({
     </div>
   );
 }
+
+
+
+
 
