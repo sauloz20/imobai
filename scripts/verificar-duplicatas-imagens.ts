@@ -1,23 +1,26 @@
-import fs from "node:fs";
+﻿
+import "dotenv/config";
+import fs from "node:fs/promises";
 import path from "node:path";
 
-const root = path.resolve("imoveis-fotos");
+import { getDb } from "../server/db";
+import { imoveis, imovelFotos } from "../drizzle/schema";
 
-type Photo = {
-  ordem?: number;
-  databasePhotoId?: number;
-  storageKey?: string;
-  storageUrl?: string;
-  pexelsId?: string | number | null;
-  pexelsUrl?: string | null;
-  photographer?: string | null;
-  sourceUrl?: string | null;
-  query?: string | null;
-  localFile?: string | null;
+const ROOT = path.resolve("imoveis-fotos");
+
+type ManifestPhoto = {
+  ordem?: number | null;
+  categoria?: string | null;
+  pexelsId?: number | string | null;
+  pexels_id?: number | string | null;
+  arquivo?: string | null;
+  storageKey?: string | null;
+  storageUrl?: string | null;
+  databasePhotoId?: number | null;
+  url_imagem?: string | null;
 };
 
 type Manifest = {
-  generatedAt?: string;
   property?: {
     id?: number;
     codigo?: string;
@@ -26,161 +29,408 @@ type Manifest = {
     bairro?: string;
     cidade?: string;
   };
-  photos?: Photo[];
+  photos?: ManifestPhoto[];
+  imagens?: ManifestPhoto[];
 };
 
-const used = new Map<
-  string,
-  Array<{
-    codigo: string;
-    titulo: string;
-    ordem: number;
-    databasePhotoId: number | string;
-    storageKey: string;
-  }>
->();
+type Property = {
+  id: number;
+  codigo: string | null;
+};
 
-const withoutPexels: Array<{
-  codigo: string;
+type DatabasePhoto = {
+  id: number;
+  imovelId: number;
   ordem: number;
-  databasePhotoId: number | string;
-  storageKey: string;
-}> = [];
+  fileKey: string;
+};
 
-const manifests = fs
-  .readdirSync(root, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => path.join(root, entry.name, "manifest.json"))
-  .filter((file) => fs.existsSync(file));
+function getPexelsId(photo: ManifestPhoto): string | null {
+  const value = photo.pexelsId ?? photo.pexels_id;
 
-let totalPhotos = 0;
-let totalPexelsPhotos = 0;
+  if (value === undefined || value === null) {
+    return null;
+  }
 
-for (const manifestPath of manifests) {
-  const folder = path.basename(path.dirname(manifestPath));
+  const normalized = String(value).trim();
+
+  return normalized.length > 0 ? normalized : null;
+}
+
+function getPhotos(manifest: Manifest): ManifestPhoto[] {
+  if (Array.isArray(manifest.photos)) {
+    return manifest.photos;
+  }
+
+  if (Array.isArray(manifest.imagens)) {
+    return manifest.imagens;
+  }
+
+  return [];
+}
+
+async function getManifestFiles(): Promise<string[]> {
+  const result: string[] = [];
+
+  let directories: string[];
 
   try {
-    const manifest = JSON.parse(
-      fs.readFileSync(manifestPath, "utf8")
-    ) as Manifest;
+    directories = await fs.readdir(ROOT);
+  } catch {
+    return result;
+  }
 
-    const codigo = manifest.property?.codigo ?? folder;
-    const titulo = manifest.property?.tituloAnuncio ?? "";
+  for (const directory of directories) {
+    const manifestPath = path.join(
+      ROOT,
+      directory,
+      "manifest.json"
+    );
 
-    for (const photo of manifest.photos ?? []) {
-      totalPhotos++;
+    try {
+      const stat = await fs.stat(manifestPath);
 
-      const pexelsId = String(photo.pexelsId ?? "").trim();
-
-      if (!pexelsId) {
-        withoutPexels.push({
-          codigo,
-          ordem: Number(photo.ordem ?? -1),
-          databasePhotoId: photo.databasePhotoId ?? "",
-          storageKey: photo.storageKey ?? "",
-        });
-
-        continue;
+      if (stat.isFile()) {
+        result.push(manifestPath);
       }
+    } catch {
+      // Ignore missing manifest files.
+    }
+  }
 
-      totalPexelsPhotos++;
+  return result.sort();
+}
 
-      if (!used.has(pexelsId)) {
-        used.set(pexelsId, []);
-      }
+async function loadManifests() {
+  const files = await getManifestFiles();
 
-      used.get(pexelsId)!.push({
+  const result: Array<{
+    filePath: string;
+    directory: string;
+    manifest: Manifest;
+  }> = [];
+
+  for (const filePath of files) {
+    try {
+      const content = await fs.readFile(filePath, "utf8");
+      const manifest = JSON.parse(content) as Manifest;
+
+      result.push({
+        filePath,
+        directory: path.basename(path.dirname(filePath)),
+        manifest,
+      });
+    } catch (error) {
+      console.log("");
+      console.log("Could not read manifest:");
+      console.log(filePath);
+      console.log(error);
+    }
+  }
+
+  return result;
+}
+
+async function loadDatabaseProperties(): Promise<Property[]> {
+  const db = await getDb();
+
+  return db
+    .select({
+      id: imoveis.id,
+      codigo: imoveis.codigo,
+    })
+    .from(imoveis);
+}
+
+async function loadDatabasePhotos(): Promise<DatabasePhoto[]> {
+  const db = await getDb();
+
+  return db
+    .select({
+      id: imovelFotos.id,
+      imovelId: imovelFotos.imovelId,
+      ordem: imovelFotos.ordem,
+      fileKey: imovelFotos.fileKey,
+    })
+    .from(imovelFotos);
+}
+
+async function main() {
+  console.log("");
+  console.log("==============================================");
+  console.log("        IMOBAI IMAGE DIAGNOSTIC");
+  console.log("==============================================");
+  console.log("");
+
+  const manifests = await loadManifests();
+  const properties = await loadDatabaseProperties();
+  const databasePhotos = await loadDatabasePhotos();
+
+  console.log(
+    `Manifests found: ${manifests.length}`
+  );
+
+  const allPhotos: Array<{
+    codigo: string;
+    ordem: number;
+    databasePhotoId: number | null;
+    pexelsId: string | null;
+    arquivo: string;
+  }> = [];
+
+  for (const item of manifests) {
+    const codigo =
+      item.manifest.property?.codigo ??
+      item.directory;
+
+    const photos = getPhotos(item.manifest);
+
+    for (const photo of photos) {
+      allPhotos.push({
         codigo,
-        titulo,
-        ordem: Number(photo.ordem ?? -1),
-        databasePhotoId: photo.databasePhotoId ?? "",
-        storageKey: photo.storageKey ?? "",
+        ordem:
+          typeof photo.ordem === "number"
+            ? photo.ordem
+            : -1,
+        databasePhotoId:
+          typeof photo.databasePhotoId === "number"
+            ? photo.databasePhotoId
+            : null,
+        pexelsId: getPexelsId(photo),
+        arquivo: String(photo.arquivo ?? ""),
       });
     }
-  } catch (error) {
-    console.log(`❌ Erro lendo ${manifestPath}`);
-    console.log(error);
   }
-}
 
-const duplicates = [...used.entries()]
-  .filter(([, occurrences]) => {
-    const properties = new Set(
-      occurrences.map((occurrence) => occurrence.codigo)
-    );
+  console.log(
+    `Photos in manifests: ${allPhotos.length}`
+  );
 
-    return properties.size > 1;
-  })
-  .sort((a, b) => Number(a[0]) - Number(b[0]));
+  const withPexels = allPhotos.filter(
+    (photo) => photo.pexelsId !== null
+  );
 
-console.log("");
-console.log("==============================================");
-console.log("      DIAGNÓSTICO GLOBAL DO IMOBAI");
-console.log("==============================================");
-console.log("");
+  const withoutPexels = allPhotos.filter(
+    (photo) => photo.pexelsId === null
+  );
 
-console.log(`Manifests encontrados: ${manifests.length}`);
-console.log(`Fotos nos manifests: ${totalPhotos}`);
-console.log(`Fotos com Pexels ID: ${totalPexelsPhotos}`);
-console.log(`Fotos sem Pexels ID: ${withoutPexels.length}`);
-console.log(`IDs Pexels únicos: ${used.size}`);
-console.log(`IDs Pexels duplicados: ${duplicates.length}`);
+  const pexelsIds = withPexels.map(
+    (photo) => photo.pexelsId as string
+  );
 
-console.log("");
-console.log("==============================================");
-console.log("FOTOS SEM PEXELS ID");
-console.log("==============================================");
+  const uniquePexelsIds = new Set(pexelsIds);
 
-if (withoutPexels.length === 0) {
-  console.log("Nenhuma.");
-} else {
-  for (const photo of withoutPexels) {
-    console.log(
-      `${photo.codigo} | ordem ${photo.ordem} | DB ${photo.databasePhotoId} | ${photo.storageKey}`
-    );
+  const idCounts = new Map<string, number>();
+
+  for (const id of pexelsIds) {
+    const current = idCounts.get(id) ?? 0;
+    idCounts.set(id, current + 1);
   }
-}
 
-console.log("");
-console.log("==============================================");
-console.log("DUPLICATAS ENTRE IMÓVEIS");
-console.log("==============================================");
+  const duplicatedIds = Array.from(idCounts.entries())
+    .filter(([, count]) => count > 1)
+    .sort(([a], [b]) => a.localeCompare(b));
 
-if (duplicates.length === 0) {
-  console.log("Nenhuma duplicata encontrada nos IDs identificáveis.");
-} else {
-  for (const [pexelsId, occurrences] of duplicates) {
-    console.log("");
-    console.log(`Pexels ID: ${pexelsId}`);
+  console.log(
+    `Photos with Pexels ID: ${withPexels.length}`
+  );
 
-    for (const occurrence of occurrences) {
+  console.log(
+    `Photos without Pexels ID: ${withoutPexels.length}`
+  );
+
+  console.log(
+    `Unique Pexels IDs: ${uniquePexelsIds.size}`
+  );
+
+  console.log(
+    `Duplicated Pexels IDs: ${duplicatedIds.length}`
+  );
+
+  console.log("");
+  console.log("==============================================");
+  console.log("PHOTOS WITHOUT PEXELS ID");
+  console.log("==============================================");
+
+  if (withoutPexels.length === 0) {
+    console.log("None.");
+  } else {
+    for (const photo of withoutPexels) {
       console.log(
-        `  ${occurrence.codigo} | ordem ${occurrence.ordem} | DB ${occurrence.databasePhotoId} | ${occurrence.storageKey}`
+        `${photo.codigo} | order ${photo.ordem} | DB ${
+          photo.databasePhotoId ?? ""
+        } | ${photo.arquivo}`
       );
     }
   }
-}
 
-console.log("");
-console.log("==============================================");
-console.log("FOTOS POR IMÓVEL");
-console.log("==============================================");
+  console.log("");
+  console.log("==============================================");
+  console.log("DUPLICATES");
+  console.log("==============================================");
 
-for (const manifestPath of manifests) {
-  try {
-    const manifest = JSON.parse(
-      fs.readFileSync(manifestPath, "utf8")
-    ) as Manifest;
+  if (duplicatedIds.length === 0) {
+    console.log("No duplicated Pexels IDs.");
+  } else {
+    for (const [id, count] of duplicatedIds) {
+      console.log("");
+      console.log(
+        `Pexels ID ${id} appears ${count} times:`
+      );
 
+      const matches = allPhotos.filter(
+        (photo) => photo.pexelsId === id
+      );
+
+      for (const match of matches) {
+        console.log(
+          `  ${match.codigo} | order ${match.ordem} | DB ${
+            match.databasePhotoId ?? ""
+          } | ${match.arquivo}`
+        );
+      }
+    }
+  }
+
+  console.log("");
+  console.log("==============================================");
+  console.log("PHOTOS PER PROPERTY");
+  console.log("==============================================");
+
+  const manifestCount = new Map<string, number>();
+
+  for (const photo of allPhotos) {
+    const current = manifestCount.get(photo.codigo) ?? 0;
+    manifestCount.set(photo.codigo, current + 1);
+  }
+
+  const propertyCodes = new Set<string>();
+
+  for (const property of properties) {
+    if (property.codigo) {
+      propertyCodes.add(property.codigo);
+    }
+  }
+
+  for (const item of manifests) {
     const codigo =
-      manifest.property?.codigo ??
-      path.basename(path.dirname(manifestPath));
+      item.manifest.property?.codigo ??
+      item.directory;
+
+    propertyCodes.add(codigo);
+  }
+
+  for (const codigo of Array.from(propertyCodes).sort()) {
+    const count = manifestCount.get(codigo) ?? 0;
 
     console.log(
-      `${codigo}: ${(manifest.photos ?? []).length}/5 fotos`
+      `${codigo}: ${count}/5 photos`
     );
-  } catch {}
+  }
+
+  console.log("");
+  console.log("==============================================");
+  console.log("DATABASE VALIDATION");
+  console.log("==============================================");
+
+  const databaseCount = new Map<number, number>();
+
+  for (const photo of databasePhotos) {
+    const current = databaseCount.get(photo.imovelId) ?? 0;
+    databaseCount.set(photo.imovelId, current + 1);
+  }
+
+  const sortedProperties = [...properties].sort(
+    (a, b) =>
+      String(a.codigo).localeCompare(
+        String(b.codigo)
+      )
+  );
+
+  for (const property of sortedProperties) {
+    const count =
+      databaseCount.get(property.id) ?? 0;
+
+    console.log(
+      `${property.codigo ?? `ID ${property.id}`}: ${count}/5 photos in database`
+    );
+  }
+
+  console.log("");
+  console.log("==============================================");
+  console.log("FINAL VALIDATION");
+  console.log("==============================================");
+
+  const expectedPhotos = properties.length * 5;
+
+  const manifestsOk = properties.every(
+    (property) =>
+      property.codigo !== null &&
+      (manifestCount.get(property.codigo) ?? 0) === 5
+  );
+
+  const databaseOk = properties.every(
+    (property) =>
+      (databaseCount.get(property.id) ?? 0) === 5
+  );
+
+  const pexelsOk =
+    withoutPexels.length === 0;
+
+  const duplicatesOk =
+    duplicatedIds.length === 0;
+
+  console.log(
+    `Expected photos: ${expectedPhotos}`
+  );
+
+  console.log(
+    `Five manifest photos per property: ${
+      manifestsOk ? "OK" : "ERROR"
+    }`
+  );
+
+  console.log(
+    `Five database photos per property: ${
+      databaseOk ? "OK" : "ERROR"
+    }`
+  );
+
+  console.log(
+    `All photos have Pexels ID: ${
+      pexelsOk ? "OK" : "WARNING"
+    }`
+  );
+
+  console.log(
+    `No duplicated Pexels IDs: ${
+      duplicatesOk ? "OK" : "ERROR"
+    }`
+  );
+
+  console.log("");
+
+  if (
+    manifestsOk &&
+    databaseOk &&
+    pexelsOk &&
+    duplicatesOk
+  ) {
+    console.log(
+      "FINAL STATUS: ALL CHECKS PASSED."
+    );
+  } else {
+    console.log(
+      "FINAL STATUS: SOME CHECKS NEED ATTENTION."
+    );
+  }
+
+  console.log("");
 }
 
-console.log("");
-console.log("==============================================");
+main().catch((error) => {
+  console.error("");
+  console.error("Diagnostic error:");
+  console.error(error);
+  process.exit(1);
+});
