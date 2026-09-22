@@ -530,13 +530,17 @@ export default function Home() {
         </button>
 
         <button
-          type="button"
-          onClick={() => setMobileNavOpen(false)}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[13px] font-medium text-[#526577] transition hover:bg-[#f1f6fa] hover:text-[#2f6f9f]"
-        >
-          <Bot size={18} />
-          Concierge IA
-        </button>
+  type="button"
+  onClick={() => {
+            setMobileNavOpen(false);
+            window.history.pushState({}, "", "/mensagens");
+            window.dispatchEvent(new PopStateEvent("popstate"));
+          }}
+  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[13px] font-medium text-[#526577] transition hover:bg-[#f1f6fa] hover:text-[#2f6f9f]"
+>
+  <Bot size={18} />
+  Concierge IA
+</button>
 
         <button
           type="button"
@@ -830,6 +834,11 @@ function Field({ label, children, className = "", dark = false }: { label: strin
 function MarketBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   return <div><div className="mb-1.5 flex items-center justify-between text-[11px]"><span className="font-medium text-[#596c80]">{label}</span><span className="font-semibold text-[#314861]">{money(value)}/m²</span></div><div className="h-2 overflow-hidden rounded-full bg-[#edf1f5]"><div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((value / max) * 100))}%`, backgroundColor: color }} /></div></div>;
 }
+
+
+
+
+
 
 
 

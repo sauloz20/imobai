@@ -1,4 +1,5 @@
-﻿import { Building2, Menu, Plus, UserRound } from "lucide-react";
+﻿import { useEffect, useRef, useState } from "react";
+import { Building2, Menu, Plus, UserRound } from "lucide-react";
 import { Link } from "wouter";
 
 export type GlobalHeaderProps = {
@@ -14,14 +15,49 @@ export function GlobalHeader({
   userName,
   onProfile,
 }: GlobalHeaderProps) {
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 12) {
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      const scrollDifference = currentScrollY - lastScrollY.current;
+
+      if (scrollDifference > 8) {
+        setIsVisible(false);
+        lastScrollY.current = currentScrollY;
+      } else if (scrollDifference < -8) {
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-[90] px-4 pt-5 sm:px-8 drop-shadow-[0_3px_12px_rgba(15,45,65,0.18)]">
+    <header
+      className={`fixed inset-x-0 top-0 z-[90] px-4 pt-5 sm:px-8 drop-shadow-[0_3px_12px_rgba(15,45,65,0.18)] transition-transform duration-300 ease-out ${
+        isVisible ? "translate-y-0" : "-translate-y-[120%]"
+      }`}
+    >
       <div className="mx-auto flex h-14 max-w-[1380px] items-center justify-between">
         {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2.5 drop-shadow-[0_3px_10px_rgba(15,45,65,0.22)]"
-          aria-label="Ir para o inÃ­cio"
+          aria-label="Ir para o início"
         >
           <span className="flex h-9 w-9 items-center justify-center text-[#10233f]">
             <Building2 size={19} strokeWidth={2} />
@@ -32,14 +68,14 @@ export function GlobalHeader({
           </span>
         </Link>
 
-        {/* NavegaÃ§Ã£o */}
+        {/* Navegação */}
         <nav
           className="hidden items-center gap-1 md:flex"
-          aria-label="NavegaÃ§Ã£o principal"
+          aria-label="Navegação principal"
         >
         </nav>
 
-        {/* AÃ§Ãµes */}
+        {/* Ações */}
         <div className="flex items-center gap-3">
           {userName ? (
             <button
@@ -83,13 +119,7 @@ export function PublishPill({ onClick }: { onClick?: () => void }) {
       className="inline-flex items-center gap-1.5 rounded-xl border border-[#d6e1eb] bg-white px-3 py-2 text-[11px] font-semibold text-[#40536a] hover:border-[#c99a3e]/50 hover:text-[#8a6110]"
     >
       <Plus size={13} />
-      Anunciar imÃ³vel
+      Anunciar imóvel
     </button>
   );
 }
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +32,7 @@ export type GeneratedCopy = {
 
 type PropertyFormModalProps = {
   open: boolean;
-  /** "create" publica um novo imóvel; "edit" salva alterações em um imóvel existente. */
+  /** "create" publica um novo imÃ³vel; "edit" salva alteraÃ§Ãµes em um imÃ³vel existente. */
   mode?: "create" | "edit";
   onClose: () => void;
   values: PropertyFormValues;
@@ -54,7 +54,7 @@ const fileToBase64 = (file: File) =>
       const value = String(reader.result || "");
       resolve(value.includes(",") ? value.split(",")[1] || "" : value);
     };
-    reader.onerror = () => reject(reader.error || new Error("Não foi possível ler a imagem"));
+    reader.onerror = () => reject(reader.error || new Error("NÃ£o foi possÃ­vel ler a imagem"));
     reader.readAsDataURL(file);
   });
 
@@ -76,19 +76,41 @@ export function PropertyFormModal({
   const photoPreviews = useMemo(() => files.map(file => ({ file, url: URL.createObjectURL(file) })), [files]);
   useEffect(() => () => photoPreviews.forEach(item => URL.revokeObjectURL(item.url)), [photoPreviews]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(event.target.files || []);
     const valid = selected.filter(file => file.type.startsWith("image/") && file.size <= 4 * 1024 * 1024);
-    if (valid.length !== selected.length) toast.error("Use apenas imagens de até 4 MB cada");
+    if (valid.length !== selected.length) toast.error("Use apenas imagens de atÃ© 4 MB cada");
     const total = files.length + valid.length;
-    if (total > 20) toast.info("Cada anúncio pode ter no máximo 20 fotos");
+    if (total > 20) toast.info("Cada anÃºncio pode ter no mÃ¡ximo 20 fotos");
     onFilesChange([...files, ...valid].slice(0, 20));
     event.target.value = "";
   };
 
   const handleSubmit = async () => {
     if (!values.bairro.trim()) {
-      toast.error("Informe o bairro do imóvel");
+      toast.error("Informe o bairro do imÃ³vel");
       return;
     }
     await onSubmit();
@@ -101,10 +123,10 @@ export function PropertyFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-[#071426]/65 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#071426]/65 p-4 py-6 backdrop-blur-sm sm:py-8"
       role="dialog"
       aria-modal="true"
-      aria-label={editing ? "Editar imóvel" : "Cadastrar imóvel"}
+      aria-label={editing ? "Editar imÃ³vel" : "Cadastrar imÃ³vel"}
       onClick={onClose}
     >
       <div
@@ -113,9 +135,9 @@ export function PropertyFormModal({
       >
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a6110]">{editing ? "Editar anúncio" : "Novo anúncio"}</div>
-            <h2 className="mt-1 text-[22px] font-semibold tracking-[-0.04em] text-[#102033]">{editing ? "Editar imóvel" : "Cadastrar imóvel"}</h2>
-            <p className="mt-1 text-[12px] text-[#656e79]">{editing ? "Altere as informações do anúncio e salve para atualizar o catálogo." : "A IA melhora o texto do anúncio e você pode incluir até 20 fotos."}</p>
+            <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a6110]">{editing ? "Editar anÃºncio" : "Novo anÃºncio"}</div>
+            <h2 className="mt-1 text-[22px] font-semibold tracking-[-0.04em] text-[#102033]">{editing ? "Editar imÃ³vel" : "Cadastrar imÃ³vel"}</h2>
+            <p className="mt-1 text-[12px] text-[#656e79]">{editing ? "Altere as informaÃ§Ãµes do anÃºncio e salve para atualizar o catÃ¡logo." : "A IA melhora o texto do anÃºncio e vocÃª pode incluir atÃ© 20 fotos."}</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-[#8a98a8] transition hover:bg-[#f1f4f7]" aria-label="Fechar">
             <X size={17} />
@@ -124,14 +146,14 @@ export function PropertyFormModal({
 
         <div className="mt-5 rounded-2xl border border-[#e8edf3] bg-[#fbfcfe] p-3">
           <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6c7f91]">
-            <span>{editing ? "Revisão do anúncio" : "Publicação guiada"}</span>
+            <span>{editing ? "RevisÃ£o do anÃºncio" : "PublicaÃ§Ã£o guiada"}</span>
             <span className="text-[#8a6110]">{completedSteps}/4 etapas</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e8edf3]">
             <div className="h-full rounded-full bg-gradient-to-r from-[#2f6f9f] to-[#c99a3e] transition-all" style={{ width: `${Math.max(12, completedSteps * 25)}%` }} />
           </div>
           <div className="mt-2 grid grid-cols-4 gap-1 text-[9px] text-[#8a98a8]">
-            <span>Dados</span><span>Características</span><span>Fotos</span><span>Revisão IA</span>
+            <span>Dados</span><span>CaracterÃ­sticas</span><span>Fotos</span><span>RevisÃ£o IA</span>
           </div>
         </div>
 
@@ -151,7 +173,7 @@ export function PropertyFormModal({
           <Field label="Cidade">
             <Input value={values.cidade} onChange={event => onValuesChange({ ...values, cidade: event.target.value })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
           </Field>
-          <Field label="Área (m²)">
+          <Field label="Ãrea (mÂ²)">
             <Input type="number" value={values.areaM2} onChange={event => onValuesChange({ ...values, areaM2: Number(event.target.value) })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
           </Field>
           <Field label="Quartos">
@@ -163,29 +185,29 @@ export function PropertyFormModal({
           <Field label="Vagas">
             <Input type="number" value={values.vagas} onChange={event => onValuesChange({ ...values, vagas: Number(event.target.value) })} className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
           </Field>
-          <Field label="Preço de venda">
+          <Field label="PreÃ§o de venda">
             <Input type="number" value={values.valorVenda} onChange={event => onValuesChange({ ...values, valorVenda: Number(event.target.value) })} placeholder="Opcional" className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
           </Field>
-          <Field label="Preço de locação">
+          <Field label="PreÃ§o de locaÃ§Ã£o">
             <Input type="number" value={values.valorAluguel} onChange={event => onValuesChange({ ...values, valorAluguel: Number(event.target.value) })} placeholder="Opcional" className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
           </Field>
         </div>
 
-        <Field label="Diferenciais do imóvel" className="mt-3">
-          <Input value={values.diferenciais} onChange={event => onValuesChange({ ...values, diferenciais: event.target.value })} placeholder="Ex.: varanda, armários planejados, luz natural" className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
+        <Field label="Diferenciais do imÃ³vel" className="mt-3">
+          <Input value={values.diferenciais} onChange={event => onValuesChange({ ...values, diferenciais: event.target.value })} placeholder="Ex.: varanda, armÃ¡rios planejados, luz natural" className="h-10 rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
         </Field>
 
-        <Field label="Descrição técnica" className="mt-3">
-          <Textarea value={values.descricaoTecnica} onChange={event => onValuesChange({ ...values, descricaoTecnica: event.target.value })} placeholder="Fale sobre planta, conservação, posição solar e outros fatos do imóvel..." className="min-h-[82px] resize-none rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
+        <Field label="DescriÃ§Ã£o tÃ©cnica" className="mt-3">
+          <Textarea value={values.descricaoTecnica} onChange={event => onValuesChange({ ...values, descricaoTecnica: event.target.value })} placeholder="Fale sobre planta, conservaÃ§Ã£o, posiÃ§Ã£o solar e outros fatos do imÃ³vel..." className="min-h-[82px] resize-none rounded-xl border-[#dce4ed] bg-[#fbfcfe] text-[12px]" />
         </Field>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#f0dfaa] bg-[#fffaf0] p-3">
           <div>
-            <div className="text-[11px] font-semibold text-[#765d20]">Descrição comercial com IA</div>
-            <p className="mt-1 text-[10px] leading-4 text-[#997f3a]">O Qwen cria título, descrição, destaques e chamada para visita usando somente os dados informados.</p>
+            <div className="text-[11px] font-semibold text-[#765d20]">DescriÃ§Ã£o comercial com IA</div>
+            <p className="mt-1 text-[10px] leading-4 text-[#997f3a]">O Qwen cria tÃ­tulo, descriÃ§Ã£o, destaques e chamada para visita usando somente os dados informados.</p>
           </div>
           <Button type="button" onClick={onGenerateCopy} disabled={generatingCopy} variant="outline" className="rounded-xl border-[#e6c86e] bg-white text-[11px] font-semibold text-[#86671b]">
-            {generatingCopy ? <Loader2 className="mr-2 animate-spin" size={14} /> : <Sparkles className="mr-2" size={14} />} Gerar descrição
+            {generatingCopy ? <Loader2 className="mr-2 animate-spin" size={14} /> : <Sparkles className="mr-2" size={14} />} Gerar descriÃ§Ã£o
           </Button>
         </div>
 
@@ -208,10 +230,10 @@ export function PropertyFormModal({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <div className="flex items-center gap-2 text-[11px] font-semibold text-[#3b5e7d]">
-                <ImagePlus size={15} /> Galeria do anúncio
+                <ImagePlus size={15} /> Galeria do anÃºncio
                 <span className="rounded-full bg-[#eaf2f8] px-2 py-0.5 text-[10px] text-[#5a7b96]">{files.length}/20 fotos</span>
               </div>
-              <p className="mt-1 text-[10px] text-[#8494a5]">JPG, PNG, WEBP ou GIF · até 4 MB por imagem.</p>
+              <p className="mt-1 text-[10px] text-[#8494a5]">JPG, PNG, WEBP ou GIF Â· atÃ© 4 MB por imagem.</p>
             </div>
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0b1f3a] px-3.5 py-2.5 text-[11px] font-semibold text-white transition hover:bg-[#12345a]">
               <ImagePlus size={14} /> Adicionar fotos
@@ -222,7 +244,7 @@ export function PropertyFormModal({
             <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">
               {photoPreviews.map((item, index) => (
                 <div key={`${item.file.name}-${index}`} className="group relative aspect-square overflow-hidden rounded-xl bg-[#e8eef3]">
-                  <img src={item.url} alt={`Foto ${index + 1} do anúncio`} className="h-full w-full object-cover" />
+                  <img src={item.url} alt={`Foto ${index + 1} do anÃºncio`} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => onFilesChange(files.filter((_, itemIndex) => itemIndex !== index))}
@@ -241,7 +263,7 @@ export function PropertyFormModal({
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} className="rounded-xl bg-white text-[12px]">Cancelar</Button>
           <Button onClick={handleSubmit} disabled={submitting} className="rounded-xl bg-[#c99a3e] text-[12px] font-semibold text-[#071426] hover:bg-[#d9ad58]">
-            {submitting ? <Loader2 className="mr-2 animate-spin" size={15} /> : <Check className="mr-2" size={15} />}{editing ? "Salvar alterações" : "Publicar imóvel"}
+            {submitting ? <Loader2 className="mr-2 animate-spin" size={15} /> : <Check className="mr-2" size={15} />}{editing ? "Salvar alteraÃ§Ãµes" : "Publicar imÃ³vel"}
           </Button>
         </div>
       </div>
@@ -259,3 +281,5 @@ function Field({ label, children, className = "" }: { label: string; children: R
 }
 
 export { fileToBase64 };
+
+

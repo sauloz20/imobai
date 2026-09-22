@@ -1,7 +1,12 @@
 ﻿import { PremiumImage } from "@/components/PremiumImage";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
-import { formatBRL, getPropertyImage, getPropertyPrice, getPropertyTitle } from "@/lib/property";
+import {
+  formatBRL,
+  getPropertyImage,
+  getPropertyPrice,
+  getPropertyTitle,
+} from "@/lib/property";
 import { cn } from "@/lib/utils";
 import {
   Bath,
@@ -42,7 +47,9 @@ export type DetailProperty = {
   fotos?: Array<{ id: number; url: string; ordem: number }> | null;
 };
 
-type SimilarProperty = Omit<DetailProperty, "fotos"> & { fotos?: DetailProperty["fotos"] };
+type SimilarProperty = Omit<DetailProperty, "fotos"> & {
+  fotos?: DetailProperty["fotos"];
+};
 
 type PropertyDetailsModalProps = {
   property: DetailProperty | null;
@@ -52,21 +59,39 @@ type PropertyDetailsModalProps = {
   onSelectSimilar?: (property: SimilarProperty) => void;
 };
 
-export function PropertyDetailsModal({ property, onClose, onNegotiate, similar = [], onSelectSimilar }: PropertyDetailsModalProps) {
+export function PropertyDetailsModal({
+  property,
+  onClose,
+  onNegotiate,
+  similar = [],
+  onSelectSimilar,
+}: PropertyDetailsModalProps) {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
     setGalleryIndex(0);
+    setFavorite(false);
   }, [property?.id]);
 
   useEffect(() => {
     if (!property) return;
+
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+
+      if (event.key === "ArrowLeft") {
+        setGalleryIndex(current => Math.max(0, current - 1));
+      }
+
+      if (event.key === "ArrowRight") {
+        setGalleryIndex(current => current + 1);
+      }
     };
+
     document.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = "";
@@ -77,31 +102,49 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
 
   const price = getPropertyPrice(property);
   const mainImage = getPropertyImage(property);
+
   const gallery = Array.from(
     new Set([
       ...(mainImage ? [mainImage] : []),
-      ...(property.fotos ?? []).map(photo => photo.url).filter(Boolean),
+      ...(property.fotos ?? [])
+        .map(photo => photo.url)
+        .filter(Boolean),
     ])
   );
 
   const currentImage = gallery[galleryIndex] ?? null;
-
-  const goToPreviousImage = () => {
-    setGalleryIndex(current => (current - 1 + gallery.length) % gallery.length);
-  };
-
-  const goToNextImage = () => {
-    setGalleryIndex(current => (current + 1) % gallery.length);
-  };
   const title = getPropertyTitle(property);
-  const description = property.descricaoIa || property.descricaoTecnica;
-  const technical = property.descricaoTecnica && property.descricaoTecnica !== description ? property.descricaoTecnica : null;
+
+  const description =
+    property.descricaoIa || property.descricaoTecnica;
+
+  const technical =
+    property.descricaoTecnica &&
+    property.descricaoTecnica !== description
+      ? property.descricaoTecnica
+      : null;
 
   const attributes = [
-    { icon: BedDouble, label: "Quartos", value: String(property.quartos ?? 0) },
-    { icon: Bath, label: "Banheiros", value: String(property.banheiros ?? 0) },
-    { icon: Car, label: "Vagas", value: String(property.vagas ?? 0) },
-    { icon: Ruler, label: "Ãrea", value: `${Number(property.areaM2 ?? 0).toLocaleString("pt-BR")} mÂ²` },
+    {
+      icon: BedDouble,
+      label: "Quartos",
+      value: String(property.quartos ?? 0),
+    },
+    {
+      icon: Bath,
+      label: "Banheiros",
+      value: String(property.banheiros ?? 0),
+    },
+    {
+      icon: Car,
+      label: "Vagas",
+      value: String(property.vagas ?? 0),
+    },
+    {
+      icon: Ruler,
+      label: "Área",
+      value: `${Number(property.areaM2 ?? 0).toLocaleString("pt-BR")} m²`,
+    },
   ];
 
   const structured = [
@@ -110,168 +153,281 @@ export function PropertyDetailsModal({ property, onClose, onNegotiate, similar =
     property.ensolarado && { label: "Ensolarado" },
   ].filter(Boolean) as Array<{ label: string }>;
 
+  const goToPreviousImage = () => {
+    if (gallery.length <= 1) return;
+
+    setGalleryIndex(
+      current => (current - 1 + gallery.length) % gallery.length
+    );
+  };
+
+  const goToNextImage = () => {
+    if (gallery.length <= 1) return;
+
+    setGalleryIndex(current => (current + 1) % gallery.length);
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#071426]/70 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[100] flex bg-[#071426]/85 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label={`Detalhes de ${title}`}
       onClick={onClose}
     >
       <div
-        className="imobai-reveal relative flex max-h-[92vh] w-full max-w-[920px] flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--shadow-modal-premium)] sm:rounded-[24px]"
+        className="imobai-reveal relative flex h-full w-full flex-col overflow-hidden bg-[#f7f9fc]"
         onClick={event => event.stopPropagation()}
       >
+        <header className="absolute left-0 right-0 top-0 z-50 flex h-[72px] items-center justify-between bg-gradient-to-b from-[#071426]/75 to-transparent px-4 sm:px-7">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-2 rounded-full border border-white/20 bg-[#071426]/60 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md transition hover:bg-[#071426]/80"
+          >
+            <ChevronLeft size={18} />
+            <span className="hidden sm:inline">Voltar</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFavorite(current => !current)}
+              aria-label={
+                favorite
+                  ? "Remover dos favoritos"
+                  : "Adicionar aos favoritos"
+              }
+              aria-pressed={favorite}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full border backdrop-blur-md transition",
+                favorite
+                  ? "border-[#c99a3e] bg-[#c99a3e] text-white"
+                  : "border-white/20 bg-[#071426]/60 text-white hover:bg-[#071426]/80"
+              )}
+            >
+              <Heart
+                size={18}
+                className={favorite ? "fill-current" : undefined}
+              />
+            </button>
+
+
+          </div>
+        </header>
+
+        <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(420px,0.85fr)]">
+          <section className="relative min-h-[48vh] bg-[#16283b] lg:min-h-0">
+            <PremiumImage
+              src={currentImage}
+              alt={`${title} — foto ${galleryIndex + 1} de ${gallery.length}`}
+              className="h-full w-full"
+              eager
+            />
+
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071426]/65 via-transparent to-[#071426]/10" />
+
+            {price.modality === "aluguel" && (
+              <span className="absolute left-5 top-20 rounded-full bg-[#2b6e9e] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg sm:left-8">
+                Aluguel
+              </span>
+            )}
+
+            {gallery.length > 1 && (
+              <>
                 <button
-          onClick={onClose}
-          type="button"
-          aria-label="Fechar detalhes"
-          className="absolute right-4 top-4 z-[100] flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#071426]/85 text-white shadow-xl backdrop-blur-sm transition hover:bg-[#071426] active:scale-95"
-        >
-          <X size={18} strokeWidth={2.5} />
-        </button>
-
-        {/* Galeria */}
-        <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#22384f] sm:aspect-[16/8]">
-          <PremiumImage
-            src={currentImage}
-            alt={`${title} — foto ${galleryIndex + 1} de ${gallery.length}`}
-            className="h-full w-full"
-            eager
-          />
-
-          {gallery.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={goToPreviousImage}
-                aria-label="Imagem anterior"
-                className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#071426]/70 text-white shadow-lg backdrop-blur-sm transition hover:bg-[#071426]/90 active:scale-95 sm:left-5"
-              >
-                <ChevronLeft size={22} strokeWidth={2.5} />
-              </button>
-
-              <button
-                type="button"
-                onClick={goToNextImage}
-                aria-label="Próxima imagem"
-                className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#071426]/70 text-white shadow-lg backdrop-blur-sm transition hover:bg-[#071426]/90 active:scale-95 sm:right-5"
-              >
-                <ChevronRight size={22} strokeWidth={2.5} />
-              </button>
-
-              <div
-                className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#071426]/60 px-3 py-2 backdrop-blur-sm"
-                aria-label={`Foto ${galleryIndex + 1} de ${gallery.length}`}
-              >
-                {gallery.map((image, index) => (
-                  <button
-                    key={`${image}-${index}`}
-                    type="button"
-                    onClick={() => setGalleryIndex(index)}
-                    aria-label={`Ver foto ${index + 1} de ${gallery.length}`}
-                    aria-current={index === galleryIndex}
-                    className={cn(
-                      "rounded-full transition-all duration-200",
-                      index === galleryIndex
-                        ? "h-1.5 w-6 bg-[#e7c984]"
-                        : "h-1.5 w-1.5 bg-white/55 hover:bg-white/90"
-                    )}
-                  />
-                ))}
-              </div>
-
-              <div className="absolute right-3 top-3 z-20 rounded-full bg-[#071426]/60 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white backdrop-blur-sm">
-                {galleryIndex + 1} / {gallery.length}
-              </div>
-            </>
-          )}
-
-          {price.modality === "aluguel" && (
-            <span className="absolute left-4 top-4 rounded-full bg-[#2b6e9e] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white">
-              Aluguel
-            </span>
-          )}
-        </div>
-        <div className="overflow-y-auto p-5 sm:p-7">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-            <div className="min-w-0">
-              {property.codigo && (
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a6110]">{property.codigo}</span>
-              )}
-              <h2 className="mt-1 text-[22px] font-semibold leading-tight tracking-[-0.03em] text-[#102033] sm:text-[26px]">{title}</h2>
-              <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#40536a]">
-                <MapPin size={14} className="text-[#8a6110]" />
-                {property.bairro}, {property.cidade}
-              </p>
-            </div>
-            <div className="shrink-0 text-left sm:text-right">
-              <div className="text-[24px] font-semibold tracking-[-0.03em] text-[#102033]">{price.primary}</div>
-              <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#656e79]">{price.label}</div>
-              {price.sale !== null && price.rent !== null && price.rent > 0 && (
-                <div className="mt-1 text-[11px] text-[#616e81]">TambÃ©m para aluguel: {formatBRL(price.rent)}/mÃªs</div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-4 gap-2 rounded-[18px] bg-[#f6f8fb] p-3.5">
-            {attributes.map(attribute => (
-              <div key={attribute.label} className="flex flex-col items-center gap-1 py-1 text-center">
-                <attribute.icon size={17} className="text-[#2b6e9e]" aria-hidden />
-                <span className="text-[15px] font-semibold text-[#102033]">{attribute.value}</span>
-                <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#656e79]">{attribute.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {(description || technical) && (
-            <div className="mt-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#656e79]">Sobre o imÃ³vel</h3>
-              <p className="mt-2 whitespace-pre-line text-[13.5px] leading-6 text-[#40536a]">{description}</p>
-              {technical && <p className="mt-3 whitespace-pre-line text-[12.5px] leading-5 text-[#616e81]">{technical}</p>}
-            </div>
-          )}
-
-          {structured.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {structured.map(item => (
-                <span
-                  key={item.label}
-                  className="flex items-center gap-1.5 rounded-full border border-[#2f8b61]/25 bg-[#eef8f1] px-3 py-1.5 text-[11px] font-semibold text-[#2f8b61]"
+                  type="button"
+                  onClick={goToPreviousImage}
+                  aria-label="Imagem anterior"
+                  className="absolute left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#071426]/65 text-white shadow-xl backdrop-blur-md transition hover:bg-[#071426]/90 active:scale-95 sm:left-7"
                 >
-                  <CheckCircle2 size={12} />
-                  {item.label}
-                </span>
+                  <ChevronLeft size={23} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={goToNextImage}
+                  aria-label="Próxima imagem"
+                  className="absolute right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#071426]/65 text-white shadow-xl backdrop-blur-md transition hover:bg-[#071426]/90 active:scale-95 sm:right-7"
+                >
+                  <ChevronRight size={23} />
+                </button>
+
+                <div className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2 rounded-full bg-[#071426]/70 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md">
+                  {galleryIndex + 1} / {gallery.length}
+                </div>
+              </>
+            )}
+
+            <div className="absolute bottom-4 left-4 right-4 z-20 flex gap-2 overflow-x-auto pb-1 sm:bottom-7 sm:left-7 sm:right-7">
+              {gallery.map((image, index) => (
+                <button
+                  key={`${image}-${index}`}
+                  type="button"
+                  onClick={() => setGalleryIndex(index)}
+                  aria-label={`Ver foto ${index + 1}`}
+                  aria-current={index === galleryIndex}
+                  className={cn(
+                    "h-14 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-[#071426]/40 shadow-lg transition sm:h-16 sm:w-24",
+                    index === galleryIndex
+                      ? "border-[#e7c984]"
+                      : "border-white/40 opacity-75 hover:border-white hover:opacity-100"
+                  )}
+                >
+                  <PremiumImage
+                    src={image}
+                    alt=""
+                    className="h-full w-full"
+                  />
+                </button>
               ))}
             </div>
-          )}
+          </section>
 
-          {/* CTA fixo em desktop dentro do bloco; fixo em mobile abaixo */}
-          <div className="mt-6 hidden sm:block">
-            <NegotiationCTA property={property} onNegotiate={onNegotiate} favorite={favorite} onToggleFavorite={() => setFavorite(current => !current)} />
-          </div>
+          <section className="min-h-0 overflow-y-auto bg-white">
+            <div className="mx-auto w-full max-w-[720px] p-5 pb-8 sm:p-8 lg:p-10">
+              {property.codigo && (
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a6110]">
+                  {property.codigo}
+                </span>
+              )}
 
-          {similar.length > 0 && (
-            <div className="mt-7 border-t border-[#eef2f6] pt-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#656e79]">ImÃ³veis semelhantes</h3>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                {similar.slice(0, 3).map(item => (
-                  <PropertyCard
-                    key={item.id}
-                    property={{ ...item, onNegotiate: undefined }}
-                    className="!rounded-[16px] shadow-none"
-                    onOpenDetails={() => onSelectSimilar?.(item)}
-                  />
+              <div className="mt-2 flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.035em] text-[#102033] sm:text-[34px]">
+                    {title}
+                  </h1>
+
+                  <p className="mt-2 flex items-center gap-1.5 text-sm text-[#40536a]">
+                    <MapPin
+                      size={16}
+                      className="shrink-0 text-[#b1812c]"
+                    />
+                    {property.bairro}, {property.cidade}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 border-b border-[#e7edf3] pb-6">
+                <div className="text-[30px] font-semibold tracking-[-0.04em] text-[#102033] sm:text-[36px]">
+                  {price.primary}
+                </div>
+
+                <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#707b88]">
+                  {price.label}
+                </div>
+
+                {price.sale !== null &&
+                  price.rent !== null &&
+                  price.rent > 0 && (
+                    <div className="mt-2 text-xs text-[#616e81]">
+                      Também para aluguel:{" "}
+                      <strong>{formatBRL(price.rent)}</strong>
+                      /mês
+                    </div>
+                  )}
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                {attributes.map(attribute => (
+                  <div
+                    key={attribute.label}
+                    className="rounded-2xl border border-[#e7edf3] bg-[#f8fafc] p-4"
+                  >
+                    <attribute.icon
+                      size={19}
+                      className="text-[#2b6e9e]"
+                      aria-hidden
+                    />
+
+                    <div className="mt-3 text-lg font-semibold text-[#102033]">
+                      {attribute.value}
+                    </div>
+
+                    <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#707b88]">
+                      {attribute.label}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
 
-        {/* CTA fixo mobile */}
-        <div className="sticky bottom-0 border-t border-[#eef2f6] bg-white/95 p-3.5 backdrop-blur-md sm:hidden">
-          <NegotiationCTA property={property} onNegotiate={onNegotiate} favorite={favorite} onToggleFavorite={() => setFavorite(current => !current)} compact />
-        </div>
+              {structured.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#707b88]">
+                    Características
+                  </h2>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {structured.map(item => (
+                      <span
+                        key={item.label}
+                        className="flex items-center gap-1.5 rounded-full border border-[#2f8b61]/20 bg-[#eef8f1] px-3 py-2 text-xs font-semibold text-[#2f8b61]"
+                      >
+                        <CheckCircle2 size={13} />
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(description || technical) && (
+                <div className="mt-7 border-t border-[#e7edf3] pt-6">
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#707b88]">
+                    Sobre o imóvel
+                  </h2>
+
+                  {description && (
+                    <p className="mt-3 whitespace-pre-line text-[14px] leading-7 text-[#40536a]">
+                      {description}
+                    </p>
+                  )}
+
+                  {technical && (
+                    <p className="mt-4 whitespace-pre-line text-[13px] leading-6 text-[#687688]">
+                      {technical}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-8">
+                <NegotiationCTA
+                  property={property}
+                  onNegotiate={onNegotiate}
+                  favorite={favorite}
+                  onToggleFavorite={() =>
+                    setFavorite(current => !current)
+                  }
+                />
+              </div>
+
+              {similar.length > 0 && (
+                <div className="mt-9 border-t border-[#e7edf3] pt-7">
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#707b88]">
+                    Imóveis semelhantes
+                  </h2>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {similar.slice(0, 4).map(item => (
+                      <PropertyCard
+                        key={item.id}
+                        property={{
+                          ...item,
+                          onNegotiate: undefined,
+                        }}
+                        className="!rounded-[18px] shadow-none"
+                        onOpenDetails={() =>
+                          onSelectSimilar?.(item)
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );
@@ -282,18 +438,16 @@ function NegotiationCTA({
   onNegotiate,
   favorite,
   onToggleFavorite,
-  compact = false,
 }: {
   property: DetailProperty;
   onNegotiate?: (property: DetailProperty) => void;
   favorite: boolean;
   onToggleFavorite: () => void;
-  compact?: boolean;
 }) {
   const [pending, setPending] = useState(false);
 
   return (
-    <div className={cn("flex items-center gap-2.5", compact ? "w-full" : "")}>
+    <div className="flex w-full gap-2.5">
       <Button
         onClick={() => {
           setPending(true);
@@ -301,27 +455,39 @@ function NegotiationCTA({
           setTimeout(() => setPending(false), 1200);
         }}
         disabled={pending}
-        className="h-11 flex-1 rounded-xl bg-[#c99a3e] text-[13px] font-semibold text-[#071426] shadow-[0_10px_26px_rgba(201,154,62,0.32)] transition hover:bg-[#d9ad58]"
+        className="h-12 flex-1 rounded-xl bg-[#c99a3e] text-sm font-semibold text-[#071426] shadow-[0_10px_26px_rgba(201,154,62,0.28)] transition hover:bg-[#d9ad58]"
       >
-        {pending ? <Loader2 size={15} className="animate-spin" /> : <MessageSquareText size={15} />}
+        {pending ? (
+          <Loader2 size={17} className="animate-spin" />
+        ) : (
+          <MessageSquareText size={17} />
+        )}
         Tenho interesse
       </Button>
+
       <button
+        type="button"
         onClick={onToggleFavorite}
-        aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+        aria-label={
+          favorite
+            ? "Remover dos favoritos"
+            : "Adicionar aos favoritos"
+        }
         aria-pressed={favorite}
         className={cn(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition",
-          favorite ? "border-[#c99a3e] bg-[#c99a3e] text-white" : "border-[#d8e1ea] bg-white text-[#40536a] hover:border-[#c99a3e]/50"
+          "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition",
+          favorite
+            ? "border-[#c99a3e] bg-[#c99a3e] text-white"
+            : "border-[#d8e1ea] bg-white text-[#40536a] hover:border-[#c99a3e]/50 hover:bg-[#fffaf0]"
         )}
       >
-        <Heart size={16} className={favorite ? "fill-current" : undefined} />
+        <Heart
+          size={18}
+          className={favorite ? "fill-current" : undefined}
+        />
       </button>
     </div>
   );
 }
-
-
-
 
 
