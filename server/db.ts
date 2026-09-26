@@ -34,6 +34,7 @@ export type PropertyFilters = {
   cidade?: string;
   bairro?: string;
   quartos?: number;
+  quartosExatos?: boolean;
   vagas?: number;
   valorMin?: number;
   valorMax?: number;
@@ -348,11 +349,11 @@ export async function listProperties(
     }
 
     if (filters.quartos) {
-      conditions.push(gte(imoveis.quartos, filters.quartos));
-    }
-
-    if (filters.vagas) {
-      conditions.push(gte(imoveis.vagas, filters.vagas));
+      conditions.push(
+        filters.quartosExatos
+          ? eq(imoveis.quartos, filters.quartos)
+          : gte(imoveis.quartos, filters.quartos),
+      );
     }
 
     if (filters.valorMax) {
@@ -438,7 +439,12 @@ function filterDemoProperties(filters: PropertyFilters) {
     if (filters.tipo && property.tipo !== filters.tipo) return false;
     if (filters.cidade && property.cidade !== filters.cidade) return false;
     if (filters.bairro && property.bairro !== filters.bairro) return false;
-    if (filters.quartos && property.quartos < filters.quartos) return false;
+    if (
+      filters.quartos &&
+      (filters.quartosExatos
+        ? property.quartos !== filters.quartos
+        : property.quartos < filters.quartos)
+    ) return false;
     if (filters.vagas && property.vagas < filters.vagas) return false;
 
     if (filters.valorMax) {
@@ -731,9 +737,7 @@ export async function createLocalSession(userId: number) {
   await db.insert(localSessions).values({
     tokenHash: hashSessionToken(token),
     userId,
-    expiresAt: new Date(
-      Date.now() + LOCAL_SESSION_MAX_AGE_MS
-    ),
+    expiresAt: new Date(Date.now() + LOCAL_SESSION_MAX_AGE_MS).toISOString(),
   });
 
   return token;
@@ -767,7 +771,7 @@ export async function getUserByLocalSessionCookie(
         ),
         gt(
           localSessions.expiresAt,
-          new Date()
+          new Date().toISOString()
         )
       )
     )
@@ -1423,6 +1427,10 @@ export async function createAiMessage(
 
   return created[0];
 }
+
+
+
+
 
 
 
