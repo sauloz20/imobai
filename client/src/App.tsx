@@ -8,6 +8,11 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Catalog from "./pages/Catalog";
 import Home from "./pages/Home";
 import Messages from "./pages/Messages";
+import Concierge from "./pages/Concierge";
+import MyProperties from "./pages/MyProperties";
+import Favorites from "./pages/Favorites";
+import Account from "./pages/Account";
+import SettingsPage from "./pages/SettingsPage";
 
 function Router() {
   return (
@@ -15,6 +20,11 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/catalogo" component={Catalog} />
       <Route path="/mensagens" component={Messages} />
+      <Route path="/concierge" component={Concierge} />
+      <Route path="/meus-imoveis" component={MyProperties} />
+      <Route path="/favoritos" component={Favorites} />
+      <Route path="/minha-conta" component={Account} />
+      <Route path="/configuracoes" component={SettingsPage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

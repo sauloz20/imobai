@@ -373,7 +373,7 @@ export default function Messages() {
       </header>
 
       <div className="relative z-10 mx-auto flex max-w-[1440px] px-3 py-4 sm:px-6 lg:py-6">
-        <div className="flex min-h-[calc(100vh-120px)] w-full overflow-hidden rounded-[30px] border border-white/80 bg-white/65 shadow-[0_30px_100px_rgba(38,68,96,0.12)] backdrop-blur-2xl">
+        <div className="flex h-[calc(100vh-120px)] w-full overflow-hidden rounded-[30px] border border-white/80 bg-white/65 shadow-[0_30px_100px_rgba(38,68,96,0.12)] backdrop-blur-2xl">
           <aside
             className={cn(
               "w-full border-r border-white/80 bg-white/45 md:w-[360px] md:shrink-0",
@@ -466,7 +466,7 @@ export default function Messages() {
 
           <section
             className={cn(
-              "min-w-0 flex-1 flex-col",
+              "min-h-0 min-w-0 flex-1 flex-col",
               mobileChatOpen ? "flex" : "hidden md:flex"
             )}
           >
@@ -558,7 +558,7 @@ export default function Messages() {
               </div>
             )}
 
-            <div className="flex-1 space-y-3 overflow-y-auto bg-white/20 p-4 sm:p-6">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-white/20 p-4 sm:p-6">
               <div className="mx-auto mb-5 w-fit rounded-full border border-white/80 bg-white/55 px-3 py-1 text-[9px] text-[#9aa7b3] shadow-sm">
                 Hoje
               </div>
@@ -582,11 +582,16 @@ export default function Messages() {
                   </div>
                 )}
 
-              {selectedMessages.map(message => (
+              {selectedMessages.map((message, index) => {
+        const previousMessage = selectedMessages[index - 1];
+        const isSameSender = previousMessage?.sender === message.sender;
+
+        return (
                 <div
                   key={message.id}
                   className={cn(
                     "flex",
+                    isSameSender ? "mt-[-6px]" : "mt-0",
                     message.sender === "me"
                       ? "justify-end"
                       : "justify-start"
@@ -601,19 +606,19 @@ export default function Messages() {
 
                   <div
                     className={cn(
-                      "max-w-[82%] rounded-[20px] px-4 py-3 text-[11px] leading-5 shadow-sm sm:max-w-[72%]",
+                      "group relative max-w-[82%] rounded-[20px] px-4 py-3 text-[13px] leading-6 font-normal shadow-sm transition-all duration-200 sm:max-w-[72%]",
                       message.sender === "me"
-                        ? "rounded-br-md bg-[#173a5e] text-white shadow-[0_8px_24px_rgba(23,58,94,0.16)]"
-                        : "rounded-bl-md border border-white/90 bg-white/75 text-[#45596b] backdrop-blur-xl"
+                        ? "rounded-br-[6px] bg-[linear-gradient(135deg,#173a5e,#214d76)] text-white shadow-[0_10px_28px_rgba(23,58,94,0.18)]"
+                        : "rounded-bl-[6px] border border-white/90 bg-white/80 text-[#30475c] shadow-[0_8px_28px_rgba(48,81,107,0.07)] backdrop-blur-xl"
                     )}
                   >
-                    <div className="whitespace-pre-wrap">
+                    <div className="whitespace-pre-wrap break-words">
                       {message.text}
                     </div>
 
                     <div
                       className={cn(
-                        "mt-1 text-[8px]",
+                        "mt-1.5 flex justify-end text-[8px] leading-none",
                         message.sender === "me"
                           ? "text-white/50"
                           : "text-[#9aa7b3]"
@@ -623,7 +628,7 @@ export default function Messages() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ); })}
 
               {sendAiMessage.isPending && isAiConversation && (
                 <div className="flex items-start gap-2">

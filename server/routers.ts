@@ -425,36 +425,64 @@ async function findConciergeSimilarProperties(
 
   const candidates: ConciergeProperty[] = [];
 
-  // 1.Âª tentativa:
-  // mantÃ©m cidade, tipo, finalidade e quantidade mÃ­nima de quartos,
-  // flexibilizando o orÃ§amento em atÃ© 10%.
+  // 1.ª tentativa: mesmo bairro + mesmos quartos + até 10% acima do orçamento.
   if (requestedPrice > 0) {
     const firstPass = await listProperties({
       ...baseFilters,
+      bairro: searchContext.bairro,
       quartos: searchContext.quartos,
+      quartosExatos: searchContext.quartosExatos,
       valorMax: Math.round(requestedPrice * 1.1),
     });
 
     candidates.push(...firstPass);
   }
 
-  // 2.Âª tentativa:
-  // mantÃ©m cidade, tipo e finalidade, flexibilizando quartos,
-  // mas limita o preÃ§o a no mÃ¡ximo 20% acima do teto informado.
+  // 2.ª tentativa: mesmo bairro + mesmos quartos + até 30% acima do orçamento.
   if (candidates.length < 2 && requestedPrice > 0) {
     const secondPass = await listProperties({
       ...baseFilters,
-      valorMax: Math.round(requestedPrice * 1.2),
+      bairro: searchContext.bairro,
+      quartos: searchContext.quartos,
+      quartosExatos: searchContext.quartosExatos,
+      valorMax: Math.round(requestedPrice * 1.3),
     });
 
     candidates.push(...secondPass);
   }
 
-  // Se o cliente nÃ£o informou preÃ§o, podemos procurar na cidade/tipo
-  // normalmente, pois nÃ£o existe um teto financeiro para respeitar.
+  // 3.ª tentativa: mesmo bairro + quartos flexibilizados + até 30% acima.
+  if (candidates.length < 2 && requestedPrice > 0) {
+    const thirdPass = await listProperties({
+      ...baseFilters,
+      bairro: searchContext.bairro,
+      quartos: searchContext.quartos,
+      quartosExatos: false,
+      valorMax: Math.round(requestedPrice * 1.3),
+    });
+
+    candidates.push(...thirdPass);
+  }
+
+  // 4.ª tentativa: amplia para a cidade, mantendo tipo e finalidade.
+  if (candidates.length < 2 && requestedPrice > 0) {
+    const fourthPass = await listProperties({
+      ...baseFilters,
+      quartos: searchContext.quartos,
+      quartosExatos: searchContext.quartosExatos,
+      valorMax: Math.round(requestedPrice * 1.3),
+    });
+
+    candidates.push(...fourthPass);
+  }
+
+  // Se o cliente não informou preço, procuramos na cidade/tipo normalmente.
   if (candidates.length < 2 && requestedPrice <= 0) {
     const fallbackPass = await listProperties({
       ...baseFilters,
+      bairro: searchContext.bairro,
+      quartos: searchContext.quartos,
+      quartosExatos: searchContext.quartosExatos,
     });
 
     candidates.push(...fallbackPass);
@@ -720,19 +748,15 @@ function pickFallbackAnswer(
     const similar = context.similarMatches.slice(0, 2);
 
     const requestedPriceMatch = normalized.match(
-      /(?:ate|maximo|teto de)\s+r?\$?\s*([\d.,]+)/i,
+      /(?:ate|maximo|teto de)\s+r?\$?\s*([\d.,]+\s*(?:milhao|milhoes?|mil|mi|k)?)/i,
     );
 
     let requestedPrice: number | null = null;
 
     if (requestedPriceMatch) {
-      const raw = requestedPriceMatch[1]
-        .replace(/\./g, "")
-        .replace(",", ".");
+      const parsed = parseBrazilianNumber(requestedPriceMatch[1]);
 
-      const parsed = Number(raw);
-
-      if (Number.isFinite(parsed)) {
+      if (parsed !== undefined) {
         requestedPrice = parsed;
       }
     }
@@ -775,7 +799,7 @@ function pickFallbackAnswer(
       ) {
         if (propertyPrice > requestedPrice) {
           differences.push(
-            `${formatMoney(propertyPrice)} acima do orÃ§amento`,
+            `${formatMoney(propertyPrice - requestedPrice)} acima do orÃ§amento`,
           );
         } else {
           differences.push(
@@ -800,22 +824,56 @@ function pickFallbackAnswer(
   }
 
   if (properties.length > 0) {
-    const intro = normalized.includes("ate") || normalized.includes("maximo")
-      ? "Encontrei estas opÃ§Ãµes dentro dos critÃ©rios informados:"
-      : "Encontrei estas opÃ§Ãµes que correspondem ao seu pedido:";
+    const finalidade = detectFinalidade(normalized);
 
-    const list = properties
-      .slice(0, 3)
-      .map(describeProperty)
-      .join("\n");
+    const purchaseProperties = properties.filter(
+      property =>
+        property.valorVenda !== null &&
+        property.valorVenda !== undefined,
+    );
 
-    const first = properties[0];
-    const recommendation =
-      properties.length === 1
-        ? `Eu comeÃ§aria pela ${first.codigo}, pois Ã© a Ãºnica opÃ§Ã£o encontrada com esses critÃ©rios.`
-        : "Os dados disponÃ­veis nÃ£o sÃ£o suficientes para escolher uma Ãºnica opÃ§Ã£o; vale comparar conservaÃ§Ã£o, documentaÃ§Ã£o e condiÃ§Ãµes da visita.";
+    const rentalProperties = properties.filter(
+      property =>
+        property.valorAluguel !== null &&
+        property.valorAluguel !== undefined,
+    );
 
-    return `${intro}\n\n${list}\n\n${recommendation} Quer que eu compare essas opÃ§Ãµes ou amplie a busca para outros bairros?`;
+    const formatPropertyList = (items: typeof properties) =>
+      items.slice(0, 3).map(describeProperty).join("\n");
+
+    if (finalidade === "compra" && purchaseProperties.length > 0) {
+      const list = formatPropertyList(purchaseProperties);
+      const first = purchaseProperties[0];
+
+      return `Encontrei estas opções de compra dentro dos critérios informados:\n\n${list}\n\n${
+        purchaseProperties.length === 1
+          ? `Encontrei apenas a ${first.codigo} com esses critérios.`
+          : "Os dados disponíveis não são suficientes para escolher uma única opção; vale comparar as características e condições de cada imóvel."
+      } Quer que eu compare essas opções ou amplie a busca?`;
+    }
+
+    if (finalidade === "aluguel" && rentalProperties.length > 0) {
+      const list = formatPropertyList(rentalProperties);
+      const first = rentalProperties[0];
+
+      return `Encontrei estas opções de aluguel dentro dos critérios informados:\n\n${list}\n\n${
+        rentalProperties.length === 1
+          ? `Encontrei apenas a ${first.codigo} com esses critérios.`
+          : "Os dados disponíveis não são suficientes para escolher uma única opção; vale comparar as características e condições de cada imóvel."
+      } Quer que eu compare essas opções ou amplie a busca?`;
+    }
+
+    const sections: string[] = [];
+
+    if (purchaseProperties.length > 0) {
+      sections.push(`**Compra**\n${formatPropertyList(purchaseProperties)}`);
+    }
+
+    if (rentalProperties.length > 0) {
+      sections.push(`**Aluguel**\n${formatPropertyList(rentalProperties)}`);
+    }
+
+    return `Encontrei opções que atendem aos demais critérios. Como você não especificou se pretende comprar ou alugar, separei os resultados por modalidade:\n\n${sections.join("\n\n")}\n\nSe quiser, posso filtrar somente compra ou somente aluguel.`;
   }
 
   const requestedCriteria = [
@@ -1430,6 +1488,7 @@ function extractNaturalPropertyFilters(text: string) {
 
   const result: {
     tipo?: string;
+bairro?: string;
     quartos?: number;
     quartosExatos?: boolean;
     vagas?: number;
@@ -1440,6 +1499,38 @@ function extractNaturalPropertyFilters(text: string) {
     ensolarado?: boolean;
     finalidade?: "compra" | "aluguel";
   } = {};
+  const knownNeighborhoods = [
+    "Major Prates",
+    "Centro",
+    "Ibituruna",
+    "Todos os Santos",
+    "Maracanã",
+    "Vila Guilhermina",
+    "São José",
+    "Independência",
+    "Jardim Panorama",
+    "Cândida Câmara",
+  ];
+
+  const normalizedNeighborhoods = knownNeighborhoods.map(bairro => ({
+    original: bairro,
+    normalized: bairro
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase(),
+  }));
+
+  const neighborhoodMatch = normalizedNeighborhoods.find(item =>
+    new RegExp(
+      `\\b(?:no|na|em)\\s+${item.normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=\\s|$|[.,!?;:])`,
+      "i",
+    ).test(normalized),
+  );
+
+  if (neighborhoodMatch) {
+    result.bairro = neighborhoodMatch.original;
+  }
+
 
   if (/\b(apartamento|apartamentos|apto|aptos)\b/.test(normalized)) {
     result.tipo = "Apartamento";
@@ -1546,6 +1637,11 @@ function mergeNaturalPropertyContext(
     ...extracted,
   };
 }
+
+
+
+
+
 
 
 
