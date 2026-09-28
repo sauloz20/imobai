@@ -95,6 +95,24 @@ export const imoveis = pgTable("imoveis", {
 	unique("imoveis_codigo_unique").on(table.codigo),
 ]);
 
+export const favorites = pgTable("favorites", {
+        id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "favorites_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
+        userId: integer("user_id").notNull(),
+        imovelId: integer("imovel_id").notNull(),
+        createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+        foreignKey({
+                columns: [table.userId],
+                foreignColumns: [users.id],
+                name: "favorites_user_id_fkey"
+        }).onDelete("cascade"),
+        foreignKey({
+                columns: [table.imovelId],
+                foreignColumns: [imoveis.id],
+                name: "favorites_imovel_id_fkey"
+        }).onDelete("cascade"),
+        unique("favorites_user_imovel_unique").on(table.userId, table.imovelId),
+]);
 export const imovelFotos = pgTable("imovel_fotos", {
 	id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "imovel_fotos_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
 	imovelId: integer("imovel_id").notNull(),
@@ -129,6 +147,7 @@ export const users = pgTable("users", {
 	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
 	lastSignedIn: timestamp({ mode: 'string' }).defaultNow().notNull(),
+	phone: varchar({ length: 30 }),
 }, (table) => [
 	index("users_email_idx").using("btree", table.email.asc().nullsLast().op("text_ops")),
 	unique("users_openId_unique").on(table.openId),
@@ -193,3 +212,20 @@ export const mensagens = pgTable("mensagens", {
 			name: "mensagens_remetente_fk"
 		}).onDelete("cascade"),
 ]);
+export const userPreferences = pgTable("user_preferences", {
+        id: integer().primaryKey().generatedAlwaysAsIdentity({ name: "user_preferences_id_seq", startWith: 1, increment: 1 }),
+        userId: integer("user_id").notNull().unique(),
+        theme: varchar({ length: 20 }).default("light").notNull(),
+        emailNotifications: boolean("email_notifications").default(true).notNull(),
+        propertyAlerts: boolean("property_alerts").default(true).notNull(),
+        deviceNotifications: boolean("device_notifications").default(false).notNull(),
+        createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+        updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+}, (table) => [
+        foreignKey({
+                columns: [table.userId],
+                foreignColumns: [users.id],
+                name: "user_preferences_user_fk"
+        }).onDelete("cascade"),
+]);
+

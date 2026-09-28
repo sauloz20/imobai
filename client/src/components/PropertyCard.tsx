@@ -12,7 +12,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Bath, BedDouble, Car, Heart, MapPin, MessageSquareText, Maximize2, Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
+import { trpc } from "@/lib/trpc";
 
 export type PropertyCardProps = {
   property: PropertyLike & {
@@ -40,6 +41,50 @@ const amenaryIcons = { pets: Heart } as const;
 
 function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenDetails, onEdit, onDelete, hideFavorite, className }: PropertyCardProps) {
   const [favorite, setFavorite] = useState(false);
+
+  const propertyId = Number(property.id);
+  const utils = trpc.useUtils();
+
+  const favoriteCheck = trpc.favorites.check.useQuery(
+    { imovelId: propertyId },
+    {
+      enabled: Number.isInteger(propertyId) && propertyId > 0,
+    }
+  );
+
+  const addFavorite = trpc.favorites.add.useMutation({
+    onSuccess: async () => {
+      setFavorite(true);
+      await utils.favorites.list.invalidate();
+      await favoriteCheck.refetch();
+    },
+  });
+
+  const removeFavorite = trpc.favorites.remove.useMutation({
+    onSuccess: async () => {
+      setFavorite(false);
+      await utils.favorites.list.invalidate();
+      await favoriteCheck.refetch();
+    },
+  });
+
+  useEffect(() => {
+    if (typeof favoriteCheck.data === "boolean") {
+      setFavorite(favoriteCheck.data);
+    }
+  }, [favoriteCheck.data]);
+
+  const toggleFavorite = () => {
+    if (!Number.isInteger(propertyId) || propertyId <= 0) {
+      return;
+    }
+
+    if (favorite) {
+      removeFavorite.mutate({ imovelId: propertyId });
+    } else {
+      addFavorite.mutate({ imovelId: propertyId });
+    }
+  };
   const price = getPropertyPrice(property, priceContext);
   const image = getPropertyImage(property);
   const title = getPropertyTitle(property);
@@ -109,9 +154,10 @@ function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenD
           type="button"
           aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           aria-pressed={favorite}
+          disabled={addFavorite.isPending || removeFavorite.isPending}
           onClick={event => {
             event.stopPropagation();
-            setFavorite(current => !current);
+            toggleFavorite();
           }}
           className={cn(
             "absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition",
@@ -233,4 +279,7 @@ function PropertyCardBase({ property, layout = "vertical", priceContext, onOpenD
 }
 
 export const PropertyCard = memo(PropertyCardBase);
+
+
+
 

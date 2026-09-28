@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -23,6 +23,12 @@ import {
   getConversation,
   getDashboardData,
   getOrCreateAiChat,
+  getUserPreferences,
+  updateUserPreferences,
+  isPropertyFavorited,
+  addFavorite,
+  removeFavorite,
+  listFavoritesForUser,
   listAiMessages,
   listConversations,
   listMessages,
@@ -34,9 +40,9 @@ import {
   updateUserProfile,
 } from "./db";
 
-const agentSystemPrompt = `VocÃª â€” o ImobAI Agent, um assistente especialista no mercado imobiliÃ¡rio brasileiro integrado a um sistema de gestÃ¡o.
-VocÃª opera em trÃªs modos: PARSER_BUSCA, GERADOR_ANUNCIO e SUGESTAO_PRECO.
-Sempre responda com JSON vÃ¡lido, sem markdown, sem comentÃ¡rios e sem inventar informaÃ§Ãµes que nÃ£o estejam na entrada.`;
+const agentSystemPrompt = `Você — o ImobAI Agent, um assistente especialista no mercado imobiliário brasileiro integrado a um sistema de gestáo.
+Você opera em três modos: PARSER_BUSCA, GERADOR_ANUNCIO e SUGESTAO_PRECO.
+Sempre responda com JSON válido, sem markdown, sem comentários e sem inventar informações que não estejam na entrada.`;
 
 const searchSchema = {
   type: "object",
@@ -58,23 +64,23 @@ const searchSchema = {
   additionalProperties: false,
 };
 
-// Cidades conhecidas para extraÃ§Ã£o de "finalidade"/"cidade" no modo fallback (sem LLM).
-// MantÃ©m curta de propÃ³sito: cobre a base de demonstraÃ§Ã£o (SÃ£o Paulo) e as cidades
+// Cidades conhecidas para extração de "finalidade"/"cidade" no modo fallback (sem LLM).
+// Mantém curta de propósito: cobre a base de demonstração (São Paulo) e as cidades
 // mais citadas em exemplos de busca, incluindo Montes Claros.
 const KNOWN_CITIES = [
   "Montes Claros",
-  "SÃ£o Paulo",
+  "São Paulo",
   "Belo Horizonte",
   "Rio de Janeiro",
   "Curitiba",
-  "UberlÃ¢ndia",
+  "Uberlândia",
   "Contagem",
   "Betim",
 ];
 
 function detectFinalidade(normalized: string): "compra" | "aluguel" | null {
-  const rentSignals = ["alugar", "aluguel", "locaÃ§Ã£o", "locacao", "locar", "arrendar"];
-  const buySignals = ["comprar", "compra", "adquirir", "aquisiÃ§Ã£o", "aquisicao", "financiar", "financiamento"];
+  const rentSignals = ["alugar", "aluguel", "locação", "locacao", "locar", "arrendar"];
+  const buySignals = ["comprar", "compra", "adquirir", "aquisição", "aquisicao", "financiar", "financiamento"];
   if (rentSignals.some(signal => normalized.includes(signal))) return "aluguel";
   if (buySignals.some(signal => normalized.includes(signal))) return "compra";
   return null;
@@ -102,17 +108,17 @@ function textFromResponse(response: InvokeResult) {
 
   if (fromContent.trim()) return fromContent;
 
-  // O Qwen3 (roteador da Hugging Face) pode devolver o campo de raciocÃ­nio
-  // (reasoning) com o "content" vazio. Nesse caso usamos o raciocÃ­nio como
-  // texto â€” melhor do que devolver uma string vazia e cair no fallback.
+  // O Qwen3 (roteador da Hugging Face) pode devolver o campo de raciocínio
+  // (reasoning) com o "content" vazio. Nesse caso usamos o raciocínio como
+  // texto — melhor do que devolver uma string vazia e cair no fallback.
   const reasoning = message?.reasoning_content ?? message?.reasoning;
   return typeof reasoning === "string" ? reasoning.trim() : "";
 }
 
-// Extrai todas as menÃ§Ãµes de valores monetÃ¡rios da frase, na ordem em que aparecem,
-// jÃ¡ convertidas para nÃºmero (aceita "mil", "milhÃ£o/milhÃµes" e "R$ 1.234,56").
+// Extrai todas as menções de valores monetários da frase, na ordem em que aparecem,
+// já convertidas para número (aceita "mil", "milhão/milhões" e "R$ 1.234,56").
 function extractAllMoneyValues(text: string): number[] {
-  const pattern = /(?:R\$\s*)?(\d+(?:[.,]\d+)?)\s*(\bmi\b|milh(?:Ã£o|oes|Ãµes)|mil)?/gi;
+  const pattern = /(?:R\$\s*)?(\d+(?:[.,]\d+)?)\s*(\bmi\b|milh(?:ão|oes|ões)|mil)?/gi;
   const values: number[] = [];
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(text)) !== null) {
@@ -120,8 +126,8 @@ function extractAllMoneyValues(text: string): number[] {
     if (!rawNumber) continue;
     const number = Number(rawNumber.replace(",", "."));
     if (Number.isNaN(number)) continue;
-    // Ignora nÃºmeros soltos que claramente nÃ£o sÃ£o valores (ex.: "2 quartos"), a menos
-    // que estejam prefixados por "R$" ou tenham uma unidade de milhar/milhÃ£o explÃ­cita.
+    // Ignora números soltos que claramente não são valores (ex.: "2 quartos"), a menos
+    // que estejam prefixados por "R$" ou tenham uma unidade de milhar/milhão explícita.
     const hasCurrencyPrefix = text.slice(Math.max(0, match.index - 3), match.index).includes("R$");
     if (!unit && !hasCurrencyPrefix) continue;
     const normalizedUnit = unit?.toLowerCase();
@@ -131,8 +137,8 @@ function extractAllMoneyValues(text: string): number[] {
   return values;
 }
 
-// Interpreta faixas de preÃ§o: "entre 250 e 300 mil", "a partir de R$ 200 mil",
-// "atÃ© R$ 300 mil" ou um valor Ãºnico (tratado como teto, como antes).
+// Interpreta faixas de preço: "entre 250 e 300 mil", "a partir de R$ 200 mil",
+// "até R$ 300 mil" ou um valor único (tratado como teto, como antes).
 function parseMoneyRange(text: string): { valorMin: number | null; valorMax: number | null } {
   const normalized = text.toLowerCase();
   const values = extractAllMoneyValues(text);
@@ -143,7 +149,7 @@ function parseMoneyRange(text: string): { valorMin: number | null; valorMax: num
     return { valorMin: Math.min(a, b), valorMax: Math.max(a, b) };
   }
 
-  const isFloor = /(a partir de|acima de|mÃ­nimo de|minimo de|no mÃ­nimo|no minimo)/.test(normalized);
+  const isFloor = /(a partir de|acima de|mínimo de|minimo de|no mínimo|no minimo)/.test(normalized);
   if (isFloor) return { valorMin: values[0], valorMax: null };
 
   return { valorMin: null, valorMax: values[0] };
@@ -159,17 +165,17 @@ export function fallbackSearch(text: string) {
         ? "Sobrado"
         : normalized.includes("terreno")
           ? "Terreno"
-          : normalized.includes("apartamento") || normalized.includes("apÃª") || normalized.includes("ape")
+          : normalized.includes("apartamento") || normalized.includes("apê") || normalized.includes("ape")
             ? "Apartamento"
             : null;
-  const bedroomMatch = normalized.match(/(\d+)\s*(?:quarto|quartos|dorm|dormitÃ³rio|dormitÃ³rios)/);
+  const bedroomMatch = normalized.match(/(\d+)\s*(?:quarto|quartos|dorm|dormitório|dormitórios)/);
   const parkingMatch = normalized.match(/(\d+)\s*(?:vaga|vagas)/);
   const hasUnquantifiedGarage = /\bgaragem\b/.test(normalized) && !parkingMatch;
-  const knownNeighborhoods = ["Pinheiros", "Vila Madalena", "Moema", "Alto de Pinheiros", "Itaim Bibi", "SaÃºde", "Perdizes", "Jardins"];
+  const knownNeighborhoods = ["Pinheiros", "Vila Madalena", "Moema", "Alto de Pinheiros", "Itaim Bibi", "Saúde", "Perdizes", "Jardins"];
   const bairro = knownNeighborhoods.find(item => normalized.includes(item.toLowerCase())) ?? null;
   const diferenciais = [
     normalized.includes("pet") || normalized.includes("cachorro") || normalized.includes("gato") ? "aceita pets" : null,
-    normalized.includes("varanda") || normalized.includes("terraÃ§oo") || normalized.includes("terraco") ? "varanda" : null,
+    normalized.includes("varanda") || normalized.includes("terraçoo") || normalized.includes("terraco") ? "varanda" : null,
     normalized.includes("ensolarad") || normalized.includes("luz natural") ? "ensolarado" : null,
     normalized.includes("quintal") || normalized.includes("jardim") ? "quintal ou jardim" : null,
   ].filter(Boolean) as string[];
@@ -194,7 +200,7 @@ function fallbackAd(input: { tipo: string; quartos: number; bairro: string; dife
   const differenceText = input.diferenciais.length ? ` com ${input.diferenciais.join(", ")}` : "";
   return {
     titulo_comercial: `${input.tipo} de ${input.quartos} quartos${input.bairro ? ` em ${input.bairro}` : ""}`,
-    descricao_persuasiva: `Uma oportunidade para viver bem${input.bairro ? ` em ${input.bairro}` : ""}. Este ${input.tipo.toLowerCase()} combina uma planta confortÃ¡vel${differenceText} e estÃ¡ pronto para receber novas histÃ³rias. Agende uma visita e descubra todos os detalhes.`,
+    descricao_persuasiva: `Uma oportunidade para viver bem${input.bairro ? ` em ${input.bairro}` : ""}. Este ${input.tipo.toLowerCase()} combina uma planta confortável${differenceText} e está pronto para receber novas histórias. Agende uma visita e descubra todos os detalhes.`,
     hashtags: ["#ImovelDosSonhos", `#${input.bairro.replace(/\s/g, "")}`, "#VivaBem"],
   };
 }
@@ -251,7 +257,7 @@ async function generatePropertyCopy(input: {
 }) {
   const fallback = {
     titulo_comercial: `${input.tipo} com ${input.quartos} quartos em ${input.bairro}`,
-    descricao_persuasiva: `ConheÃ§a este ${input.tipo.toLowerCase()} em ${input.bairro}, ${input.cidade}, com ${input.areaM2} mÂ², ${input.quartos} quartos, ${input.banheiros} banheiros e ${input.vagas} vagas. ${input.descricaoTecnica || "Uma oportunidade para viver com praticidade, conforto e boa localizaÃ§Ã£o."} Agende uma visita para conhecer todos os detalhes.`,
+    descricao_persuasiva: `Conheça este ${input.tipo.toLowerCase()} em ${input.bairro}, ${input.cidade}, com ${input.areaM2} m², ${input.quartos} quartos, ${input.banheiros} banheiros e ${input.vagas} vagas. ${input.descricaoTecnica || "Uma oportunidade para viver com praticidade, conforto e boa localização."} Agende uma visita para conhecer todos os detalhes.`,
     destaques: input.diferenciais,
     cta: "Agende uma visita e converse com o anunciante.",
     hashtags: [`#${input.tipo.replace(/\s/g, "")}`, `#${input.bairro.replace(/\s/g, "")}`, "#ImoveisSP"],
@@ -260,7 +266,7 @@ async function generatePropertyCopy(input: {
     const response = await invokeAgentLLM({
       model: "Qwen/Qwen3.8-27B",
       messages: [
-        { role: "system", content: `VocÃª â€” um redator imobiliÃ¡rio brasileiro de alta conversÃ£o. Gere textos claros, elegantes e confiÃ¡veis para um anÃºncio. Use apenas os fatos fornecidos; nunca invente metragem, vista, reformas, condomÃ­nio, distÃ¢ncia, documentaÃ§Ã£o, seguranÃ§aa ou amenidades. Destaque benefÃ­cios sem promessas absolutas. A descriÃ§Ã£o deve ter 2 ou 3 parÃ¡grafos curtos, incluir os dados objetivos, contexto do bairro somente quando fornecido, diferenciais informados e uma chamada para visita. Escreva em portuguÃªs do Brasil, sem markdown.` },
+        { role: "system", content: `Você — um redator imobiliário brasileiro de alta conversão. Gere textos claros, elegantes e confiáveis para um anúncio. Use apenas os fatos fornecidos; nunca invente metragem, vista, reformas, condomínio, distância, documentação, segurançaa ou amenidades. Destaque benefícios sem promessas absolutas. A descrição deve ter 2 ou 3 parágrafos curtos, incluir os dados objetivos, contexto do bairro somente quando fornecido, diferenciais informados e uma chamada para visita. Escreva em português do Brasil, sem markdown.` },
         { role: "user", content: JSON.stringify(input) },
       ],
       responseFormat: {
@@ -343,71 +349,71 @@ function buildConciergeSystemPrompt(context: {
   marketContext: string;
   contextoBuscaAtual: string;
 }) {
-  return `VocÃª â€” o ImobAI Concierge, o consultor imobiliÃ¡rio digital de um portal brasileiro. VocÃª atende, na mesma conversa, compradores, locatÃ©rios, proprietÃ¡rios e corretores sobre apartamentos, casas, sobrados, coberturas e terrenos.
+  return `Você — o ImobAI Concierge, o consultor imobiliário digital de um portal brasileiro. Você atende, na mesma conversa, compradores, locatérios, proprietários e corretores sobre apartamentos, casas, sobrados, coberturas e terrenos.
 
-QUEM VOCÃŠ â€”
-- Objetivo, caloroso e direto ao ponto â€” como um corretor experiente que respeita o tempo do cliente.
-- Especialista em interpretar a intenÃ§Ã£o por trÃªs da pergunta (comprar, alugar, comparar, negociar, agendar visita, entender um bairro) e responder exatamente para essa intenÃ§Ã£o.
-- Nunca robÃ³tico: varie a abertura das respostas, evite repetir a mesma frase de efeito em toda mensagem.
+QUEM VOCÊ —
+- Objetivo, caloroso e direto ao ponto — como um corretor experiente que respeita o tempo do cliente.
+- Especialista em interpretar a intenção por três da pergunta (comprar, alugar, comparar, negociar, agendar visita, entender um bairro) e responder exatamente para essa intenção.
+- Nunca robótico: varie a abertura das respostas, evite repetir a mesma frase de efeito em toda mensagem.
 
-FONTES DE DADOS DISPONÃVEIS (Ã© a ÃšNICA verdade que vocÃª pode usar â€” nunca invente nada alÃ©m disso)
-1. Filtro de busca ativo na conversa (o que a pessoa jÃ¡ disse que procura):
+FONTES DE DADOS DISPONÍVEIS (é a ÚNICA verdade que você pode usar — nunca invente nada além disso)
+1. Filtro de busca ativo na conversa (o que a pessoa já disse que procura):
 ${context.contextoBuscaAtual}
-2. ImÃ³veis do catÃ¡logo compatÃ©veis com esse filtro (atÃ© 6, formato JSON por linha â€” "codigo" identifica o imÃ³vel):
+2. Imóveis do catálogo compatéveis com esse filtro (até 6, formato JSON por linha — "codigo" identifica o imóvel):
 ${context.catalogContext}
-2A. ALTERNATIVAS SEMELHANTES â€” somente quando nÃ£o existe correspondÃªncia exata (mÃ¡ximo 2):
+2A. ALTERNATIVAS SEMELHANTES — somente quando não existe correspondência exata (máximo 2):
 ${context.similarCatalogContext}
-IMPORTANTE: estas alternativas NÃƒO atendem necessariamente a todos os critÃ©rios originais. Ao mencionÃ¡-las, explique objetivamente o que Ã© diferente. Nunca apresente uma alternativa semelhante como correspondÃªncia exata.
-3. PortfÃ³lio privado do usuÃ¡rio logado (imÃ³veis que ELE mesmo cadastrou como anunciante, nÃ£o como comprador):
+IMPORTANTE: estas alternativas NÃO atendem necessariamente a todos os critérios originais. Ao mencioná-las, explique objetivamente o que é diferente. Nunca apresente uma alternativa semelhante como correspondência exata.
+3. Portfólio privado do usuário logado (imóveis que ELE mesmo cadastrou como anunciante, não como comprador):
 ${context.portfolioContext}
 4. Indicadores de mercado do portal:
 ${context.marketContext}
 
 REGRAS DE OURO
-- Toda vez que vocÃª mencionar um imÃ³vel especÃ­fico, cite o cÃ³digo dele (ex.: "o IMB-2048"). Nunca descreva um imÃ³vel que nÃ£o esteja em uma das listas acima.
-- Se a pergunta pedir algo que os dados acima nÃ£o cobrem (endereÃ§o exato, documentaÃ§Ã£o, situaÃ§Ã£o de condomÃ­nio, reformas, vista, seguranÃ§aa do prÃ©dio, motivo da venda, margem de negociaÃ§Ã£o do proprietÃ¡rio), diga claramente que essa informaÃ§Ã£o nÃ£o estÃ¡ disponÃ­vel aqui e oriente a confirmar diretamente com o anunciante ou na visita.
-- PreÃ§o sugerido ou faixa de mercado â€” sempre uma referÃªncia estatÃ­stica, nunca uma avaliaÃ§Ã£o formal â€” deixe isso explÃ­cito quando falar de valores.
-- Nunca dÃª parecer jurÃ­dico, financeiro (ex.: aprovaÃ§Ã£o de financiamento) ou de engenharia estrutural; nesses casos, recomende falar com o profissional habilitado (advogado, correspondente bancÃ¡rio, engenheiro/perito), sem se recusar a ajudar com o que estÃ¡ ao seu alcance.
-- Se o catÃ¡logo nÃ£o tiver nenhum imÃ³vel compatÃ­vel com o que a pessoa quer (ex.: cidade sem cobertura no portal), diga isso com honestidade e sugira o prÃ³ximo passo (ajustar o filtro, cadastrar um alerta, ou ampliar bairro/cidade) em vez de inventar opÃ§Ãµes.
+- Toda vez que você mencionar um imóvel específico, cite o código dele (ex.: "o IMB-2048"). Nunca descreva um imóvel que não esteja em uma das listas acima.
+- Se a pergunta pedir algo que os dados acima não cobrem (endereço exato, documentação, situação de condomínio, reformas, vista, segurançaa do prédio, motivo da venda, margem de negociação do proprietário), diga claramente que essa informação não está disponível aqui e oriente a confirmar diretamente com o anunciante ou na visita.
+- Preço sugerido ou faixa de mercado — sempre uma referência estatística, nunca uma avaliação formal — deixe isso explícito quando falar de valores.
+- Nunca dê parecer jurídico, financeiro (ex.: aprovação de financiamento) ou de engenharia estrutural; nesses casos, recomende falar com o profissional habilitado (advogado, correspondente bancário, engenheiro/perito), sem se recusar a ajudar com o que está ao seu alcance.
+- Se o catálogo não tiver nenhum imóvel compatível com o que a pessoa quer (ex.: cidade sem cobertura no portal), diga isso com honestidade e sugira o próximo passo (ajustar o filtro, cadastrar um alerta, ou ampliar bairro/cidade) em vez de inventar opções.
 
 COMO RESPONDER PARA CADA TIPO DE PERGUNTA
-- Comparar imÃ³veis: monte uma comparaÃ§Ã£o objetiva (preÃ§o, mÂ², quartos, vagas, diferenciais) usando sÃ³ os imÃ³veis do catÃ¡logo/portfÃ³lio acima, e termine indicando qual se encaixa melhor no que a pessoa pediu e por quÃª.
-- PreÃ§o / "vale a pena esse valor?": use o mÂ² mÃ©dio do bairro nos indicadores de mercado quando disponÃ­vel; se nÃ£o houver dado do bairro pedido, diga isso e use a mÃ©dia geral como referÃªncia aproximada.
-- Preparar visita: dÃª uma lista curta de perguntas prÃ¡ticas para levar (estado de conservaÃ§Ã£o, valor do condomÃ­nio, contas inclusas, documentaÃ§Ã£o, tempo atÃ© estaÃ§Ãµes/serviÃ§os, regras do condomÃ­nio).
-- NegociaÃ§Ã£o: sugira uma mensagem ou script de abordagem respeitoso, sem prometer desconto ou resultado.
-- DÃºvida sobre bairro/cidade sem dado no portal: seja honesto sobre a limitaÃ§Ã£o e ofereÃ§a ajudar com o que estÃ¡ disponÃ­vel.
-- Pergunta fora do escopo imobiliÃ¡rio: recuse com gentileza e redirecione para o que vocÃª pode fazer aqui.
+- Comparar imóveis: monte uma comparação objetiva (preço, m², quartos, vagas, diferenciais) usando só os imóveis do catálogo/portfólio acima, e termine indicando qual se encaixa melhor no que a pessoa pediu e por quê.
+- Preço / "vale a pena esse valor?": use o m² médio do bairro nos indicadores de mercado quando disponível; se não houver dado do bairro pedido, diga isso e use a média geral como referência aproximada.
+- Preparar visita: dê uma lista curta de perguntas práticas para levar (estado de conservação, valor do condomínio, contas inclusas, documentação, tempo até estações/serviços, regras do condomínio).
+- Negociação: sugira uma mensagem ou script de abordagem respeitoso, sem prometer desconto ou resultado.
+- Dúvida sobre bairro/cidade sem dado no portal: seja honesto sobre a limitação e ofereça ajudar com o que está disponível.
+- Pergunta fora do escopo imobiliário: recuse com gentileza e redirecione para o que você pode fazer aqui.
 
 PRIORIDADE DA MENSAGEM ATUAL
-- O pedido mais recente do usuÃ¡rio tem prioridade sobre filtros anteriores quando houver conflito.
-- Os filtros estruturados enviados pelo sistema jÃ¡ foram extraÃ­dos da mensagem atual; use-os como fonte principal para entender orÃ§amento, tipo, quartos, vagas e caracterÃ­sticas.
-- Nunca diga apenas "com os filtros atuais" quando a pessoa acabou de informar um novo critÃ©rio. Explique quais critÃ©rios foram considerados.
-- Quando houver atÃ© trÃªs opÃ§Ãµes compatÃ­veis, recomende uma principal e explique objetivamente por qu?.
-- Quando houver muitas opÃ§Ãµes, priorize o melhor equilÃ­brio entre adequaÃ§Ã£o ao pedido, preÃ§o, ?rea, quartos e diferenciais realmente informados.
-- Se o usuÃ¡rio informar apenas um orÃ§amento, nÃ£o presuma bairro especÃ­fico alÃ©m do filtro jÃ¡ ativo; informe se a busca permaneceu limitada ao bairro atual.
-CONTEXTO E HISTÃ“RICO DA BUSCA
-- O pedido mais recente do usuÃ¡rio tem prioridade sobre filtros anteriores quando houver conflito.
-- SÃ³ mencione orÃ§amento, cidade, bairro ou outro critÃ©rio quando ele estiver na mensagem atual ou tiver sido explicitamente mantido no histÃ³rico.
-- Quando utilizar um critÃ©rio anterior, diga claramente: "mantendo o critÃ©rio informado anteriormente".
-- Nunca apresente um orÃ§amento antigo como se tivesse sido informado na mensagem atual.
-- Para uma mensagem como "casa de trÃªs quartos", priorize o tipo e a quantidade de quartos sem mencionar orÃ§amento antigo, salvo se ele ainda estiver explicitamente ativo.
-- Se o usuÃ¡rio nÃ£o informar orÃ§amento na mensagem atual, nÃ£o diga que o imÃ³vel estÃ¡ "dentro do seu teto" sem explicar que esse limite veio de uma mensagem anterior.
-- Quando houver imÃ³veis compatÃ­veis, recomende uma opÃ§Ã£o principal e explique objetivamente o motivo.
-- Se os imÃ³veis forem muito semelhantes, diga que os dados disponÃ­veis nÃ£o permitem escolher uma opÃ§Ã£o vencedora.
+- O pedido mais recente do usuário tem prioridade sobre filtros anteriores quando houver conflito.
+- Os filtros estruturados enviados pelo sistema já foram extraídos da mensagem atual; use-os como fonte principal para entender orçamento, tipo, quartos, vagas e características.
+- Nunca diga apenas "com os filtros atuais" quando a pessoa acabou de informar um novo critério. Explique quais critérios foram considerados.
+- Quando houver até três opções compatíveis, recomende uma principal e explique objetivamente por qu?.
+- Quando houver muitas opções, priorize o melhor equilíbrio entre adequação ao pedido, preço, ?rea, quartos e diferenciais realmente informados.
+- Se o usuário informar apenas um orçamento, não presuma bairro específico além do filtro já ativo; informe se a busca permaneceu limitada ao bairro atual.
+CONTEXTO E HISTÓRICO DA BUSCA
+- O pedido mais recente do usuário tem prioridade sobre filtros anteriores quando houver conflito.
+- Só mencione orçamento, cidade, bairro ou outro critério quando ele estiver na mensagem atual ou tiver sido explicitamente mantido no histórico.
+- Quando utilizar um critério anterior, diga claramente: "mantendo o critério informado anteriormente".
+- Nunca apresente um orçamento antigo como se tivesse sido informado na mensagem atual.
+- Para uma mensagem como "casa de três quartos", priorize o tipo e a quantidade de quartos sem mencionar orçamento antigo, salvo se ele ainda estiver explicitamente ativo.
+- Se o usuário não informar orçamento na mensagem atual, não diga que o imóvel está "dentro do seu teto" sem explicar que esse limite veio de uma mensagem anterior.
+- Quando houver imóveis compatíveis, recomende uma opção principal e explique objetivamente o motivo.
+- Se os imóveis forem muito semelhantes, diga que os dados disponíveis não permitem escolher uma opção vencedora.
 - Use sempre a forma correta de singular e plural: "1 vaga", "2 vagas", "1 banheiro", "2 banheiros", "1 quarto", "3 quartos".
-- Nunca use expressÃµes como "cabem com folga no seu teto", "cabem confortavelmente no seu teto" ou similares.
-- Quando o imÃ³vel estiver abaixo do limite informado, escreva apenas: "estÃ¡ dentro do orÃ§amento de R$ X" ou informe diretamente o preÃ§o.
-- Seja objetivo e nÃ£o trate um imÃ³vel barato como necessariamente melhor.
+- Nunca use expressões como "cabem com folga no seu teto", "cabem confortavelmente no seu teto" ou similares.
+- Quando o imóvel estiver abaixo do limite informado, escreva apenas: "está dentro do orçamento de R$ X" ou informe diretamente o preço.
+- Seja objetivo e não trate um imóvel barato como necessariamente melhor.
 FORMATO DA RESPOSTA
-- Comece respondendo diretamente â€” pergunta em 1-2 frases.
-- Use bullets ou passos curtos apenas quando isso realmente ajudar a organizar a informaÃ§Ã£o (ex.: comparaÃ§Ã£o, checklist de visita); nÃ£o force listas em respostas simples.
-- Escreva em portuguÃªs do Brasil, sem jargÃ£o tÃ©cnico desnecessÃ¡rio, em parÃ¡grafos curtos.
-- Termine com uma prÃ³xima aÃ§Ã£o concreta (ex.: "quer que eu monte as perguntas para a visita ao IMB-2048?") ou, se faltar contexto essencial, faÃ§a no mÃ¡ximo UMA pergunta objetiva.`;
+- Comece respondendo diretamente — pergunta em 1-2 frases.
+- Use bullets ou passos curtos apenas quando isso realmente ajudar a organizar a informação (ex.: comparação, checklist de visita); não force listas em respostas simples.
+- Escreva em português do Brasil, sem jargão técnico desnecessário, em parágrafos curtos.
+- Termine com uma próxima ação concreta (ex.: "quer que eu monte as perguntas para a visita ao IMB-2048?") ou, se faltar contexto essencial, faça no máximo UMA pergunta objetiva.`;
 }
 
-// Respostas de contingÃªncia quando a LLM estÃ¡ indisponÃ­vel. Em vez de uma Ãºnica
-// mensagem genÃ©rica, usamos palavras-chave da pergunta para escolher a resposta mais
-// relevante e jÃ¡ embutimos dados reais do catÃ¡logo/mercado para nÃ£o soar robÃ³tico.
+// Respostas de contingência quando a LLM está indisponível. Em vez de uma única
+// mensagem genérica, usamos palavras-chave da pergunta para escolher a resposta mais
+// relevante e já embutimos dados reais do catálogo/mercado para não soar robótico.
 
 type ConciergeProperty = Awaited<ReturnType<typeof listProperties>>[number];
 
@@ -425,7 +431,7 @@ async function findConciergeSimilarProperties(
 
   const candidates: ConciergeProperty[] = [];
 
-  // 1.ª tentativa: mesmo bairro + mesmos quartos + até 10% acima do orçamento.
+  // 1.� tentativa: mesmo bairro + mesmos quartos + at� 10% acima do or�amento.
   if (requestedPrice > 0) {
     const firstPass = await listProperties({
       ...baseFilters,
@@ -438,7 +444,7 @@ async function findConciergeSimilarProperties(
     candidates.push(...firstPass);
   }
 
-  // 2.ª tentativa: mesmo bairro + mesmos quartos + até 30% acima do orçamento.
+  // 2.� tentativa: mesmo bairro + mesmos quartos + at� 30% acima do or�amento.
   if (candidates.length < 2 && requestedPrice > 0) {
     const secondPass = await listProperties({
       ...baseFilters,
@@ -451,7 +457,7 @@ async function findConciergeSimilarProperties(
     candidates.push(...secondPass);
   }
 
-  // 3.ª tentativa: mesmo bairro + quartos flexibilizados + até 30% acima.
+  // 3.� tentativa: mesmo bairro + quartos flexibilizados + at� 30% acima.
   if (candidates.length < 2 && requestedPrice > 0) {
     const thirdPass = await listProperties({
       ...baseFilters,
@@ -464,7 +470,7 @@ async function findConciergeSimilarProperties(
     candidates.push(...thirdPass);
   }
 
-  // 4.ª tentativa: amplia para a cidade, mantendo tipo e finalidade.
+  // 4.� tentativa: amplia para a cidade, mantendo tipo e finalidade.
   if (candidates.length < 2 && requestedPrice > 0) {
     const fourthPass = await listProperties({
       ...baseFilters,
@@ -476,7 +482,7 @@ async function findConciergeSimilarProperties(
     candidates.push(...fourthPass);
   }
 
-  // Se o cliente não informou preço, procuramos na cidade/tipo normalmente.
+  // Se o cliente n�o informou pre�o, procuramos na cidade/tipo normalmente.
   if (candidates.length < 2 && requestedPrice <= 0) {
     const fallbackPass = await listProperties({
       ...baseFilters,
@@ -604,7 +610,7 @@ function buildNonSearchFallback(
     .trim();
 
   if (intent === "mercado") {
-    const bairroMatch = normalized.match(/(?:no|na|em)\s+([a-z0-9À-ÿ ]+)/i);
+    const bairroMatch = normalized.match(/(?:no|na|em)\s+([a-z0-9�-� ]+)/i);
     const bairro = bairroMatch?.[1]?.trim();
 
     if (bairro) {
@@ -613,15 +619,15 @@ function buildNonSearchFallback(
       );
 
       if (found) {
-        return `No catálogo atual do ImobAI, o preço médio por m² em ${found.bairro} está em aproximadamente R$ ${Math.round(found.priceM2).toLocaleString("pt-BR")}/m². Esse valor é uma referência do catálogo disponível e não representa necessariamente o preço de todos os imóveis do bairro.`;
+        return `No cat�logo atual do ImobAI, o pre�o m�dio por m� em ${found.bairro} est� em aproximadamente R$ ${Math.round(found.priceM2).toLocaleString("pt-BR")}/m�. Esse valor � uma refer�ncia do cat�logo dispon�vel e n�o representa necessariamente o pre�o de todos os im�veis do bairro.`;
       }
     }
 
-    return `No catálogo atual do ImobAI, há ${market.totalActive} imóveis ativos e o preço médio geral é de aproximadamente R$ ${Math.round(market.avgPrice).toLocaleString("pt-BR")}. Esses números são referências do catálogo disponível e podem não representar todo o mercado imobiliário da região.`;
+    return `No cat�logo atual do ImobAI, h� ${market.totalActive} im�veis ativos e o pre�o m�dio geral � de aproximadamente R$ ${Math.round(market.avgPrice).toLocaleString("pt-BR")}. Esses n�meros s�o refer�ncias do cat�logo dispon�vel e podem n�o representar todo o mercado imobili�rio da regi�o.`;
   }
 
   if (intent === "opiniao" || intent === "informacao") {
-    const bairroMatch = normalized.match(/(?:morar|bairro|regiao|em|no|na)\s+(?:no|na|em)?\s*([a-z0-9À-ÿ ]+)/i);
+    const bairroMatch = normalized.match(/(?:morar|bairro|regiao|em|no|na)\s+(?:no|na|em)?\s*([a-z0-9�-� ]+)/i);
     const bairro = bairroMatch?.[1]?.trim();
 
     if (bairro) {
@@ -630,22 +636,22 @@ function buildNonSearchFallback(
       );
 
       if (found) {
-        return `Sobre morar em ${found.bairro}, o catálogo atual do ImobAI indica um preço médio de aproximadamente R$ ${Math.round(found.priceM2).toLocaleString("pt-BR")}/m². Para avaliar se o bairro combina com você, também vale considerar acesso, comércio, transporte, segurança e o tipo de imóvel que procura. O ImobAI não possui dados suficientes no momento para afirmar esses outros aspectos com segurança.`;
+        return `Sobre morar em ${found.bairro}, o cat�logo atual do ImobAI indica um pre�o m�dio de aproximadamente R$ ${Math.round(found.priceM2).toLocaleString("pt-BR")}/m�. Para avaliar se o bairro combina com voc�, tamb�m vale considerar acesso, com�rcio, transporte, seguran�a e o tipo de im�vel que procura. O ImobAI n�o possui dados suficientes no momento para afirmar esses outros aspectos com seguran�a.`;
       }
     }
 
-    return "Posso ajudar a avaliar um bairro ou uma região, mas preciso separar opinião de dados objetivos. No momento, o ImobAI possui principalmente dados de imóveis e referências de mercado; se você me disser o bairro ou a região, posso usar esses dados sem inventar características que não estejam disponíveis.";
+    return "Posso ajudar a avaliar um bairro ou uma regi�o, mas preciso separar opini�o de dados objetivos. No momento, o ImobAI possui principalmente dados de im�veis e refer�ncias de mercado; se voc� me disser o bairro ou a regi�o, posso usar esses dados sem inventar caracter�sticas que n�o estejam dispon�veis.";
   }
 
   if (intent === "comparacao") {
-    return "Posso comparar os imóveis ou bairros que você indicar. Para uma comparação objetiva, vou considerar apenas os dados disponíveis no ImobAI, como preço, área, quartos, banheiros, vagas e outras características cadastradas.";
+    return "Posso comparar os im�veis ou bairros que voc� indicar. Para uma compara��o objetiva, vou considerar apenas os dados dispon�veis no ImobAI, como pre�o, �rea, quartos, banheiros, vagas e outras caracter�sticas cadastradas.";
   }
 
   if (intent === "imovel_especifico") {
-    return "Posso consultar um imóvel específico pelo código IMB. Para manter a resposta confiável, vou usar somente os dados cadastrados para aquele imóvel e não preencher informações que não estejam disponíveis.";
+    return "Posso consultar um im�vel espec�fico pelo c�digo IMB. Para manter a resposta confi�vel, vou usar somente os dados cadastrados para aquele im�vel e n�o preencher informa��es que n�o estejam dispon�veis.";
   }
 
-  return "Posso ajudar com informações sobre imóveis, bairros e mercado imobiliário usando os dados disponíveis no ImobAI. Se quiser, me diga o que você gostaria de saber."; 
+  return "Posso ajudar com informa��es sobre im�veis, bairros e mercado imobili�rio usando os dados dispon�veis no ImobAI. Se quiser, me diga o que voc� gostaria de saber."; 
 }
 
 function pickFallbackAnswer(
@@ -708,7 +714,7 @@ function pickFallbackAnswer(
 
   const describeProperty = (property: typeof properties[number]) => {
     const details = [
-      property.areaM2 !== undefined ? `${property.areaM2} mÂ²` : null,
+      property.areaM2 !== undefined ? `${property.areaM2} m²` : null,
       plural(property.quartos, "quarto", "quartos"),
       plural(property.banheiros, "banheiro", "banheiros"),
       plural(property.vagas, "vaga", "vagas"),
@@ -723,10 +729,10 @@ function pickFallbackAnswer(
     const price =
       formatMoney(property.valorVenda) ||
       (formatMoney(property.valorAluguel)
-        ? `${formatMoney(property.valorAluguel)}/mÃªs`
-        : "preÃ§o nÃ£o informado");
+        ? `${formatMoney(property.valorAluguel)}/mês`
+        : "preço não informado");
 
-    return `**${property.codigo}** â€” ${property.tituloAnuncio || property.tipo || "ImÃ³vel"} | ${details.join(", ")} | ${price}${features.length ? ` | ${features.join(", ")}` : ""}`;
+    return `**${property.codigo}** — ${property.tituloAnuncio || property.tipo || "Imóvel"} | ${details.join(", ")} | ${price}${features.length ? ` | ${features.join(", ")}` : ""}`;
   };
 
   if (intent !== "busca_imovel") {
@@ -734,11 +740,11 @@ function pickFallbackAnswer(
   }
 
   if (/(visita|visitar|conhecer|agendar)/.test(normalized)) {
-    return "Para preparar a visita, recomendo confirmar o estado de conservaÃ§Ã£o, reformas recentes, documentaÃ§Ã£o, valor do condomÃ­nio, contas incluÃ­das e condiÃ§Ãµes de negociaÃ§Ã£o. Quer que eu prepare uma lista especÃ­fica para um dos imÃ³veis?";
+    return "Para preparar a visita, recomendo confirmar o estado de conservação, reformas recentes, documentação, valor do condomínio, contas incluídas e condições de negociação. Quer que eu prepare uma lista específica para um dos imóveis?";
   }
 
   if (/(negocia|desconto|abaixar o preco|proposta)/.test(normalized)) {
-    return "Para negociar, apresente uma proposta objetiva com o valor que vocÃª pretende pagar e os motivos da oferta. O portal nÃ£o informa uma margem de desconto garantida, entÃ£o a condiÃ§Ã£o precisa ser confirmada diretamente com o anunciante.";
+    return "Para negociar, apresente uma proposta objetiva com o valor que você pretende pagar e os motivos da oferta. O portal não informa uma margem de desconto garantida, então a condição precisa ser confirmada diretamente com o anunciante.";
   }
 
   if (
@@ -799,28 +805,28 @@ function pickFallbackAnswer(
       ) {
         if (propertyPrice > requestedPrice) {
           differences.push(
-            `${formatMoney(propertyPrice - requestedPrice)} acima do orÃ§amento`,
+            `${formatMoney(propertyPrice - requestedPrice)} acima do orçamento`,
           );
         } else {
           differences.push(
-            `preÃ§o de ${formatMoney(propertyPrice)}`,
+            `preço de ${formatMoney(propertyPrice)}`,
           );
         }
       }
 
       return differences.length
         ? differences.join(" e ")
-        : "outros critÃ©rios prÃ³ximos ao pedido";
+        : "outros critérios próximos ao pedido";
     };
 
     const list = similar
       .map(
         property =>
-          `${describeProperty(property)} â€” diferenÃ§a principal: ${explainDifference(property)}.`,
+          `${describeProperty(property)} — diferença principal: ${explainDifference(property)}.`,
       )
       .join("\n");
 
-    return `NÃ£o encontrei um imÃ³vel que atenda exatamente aos critÃ©rios. Separei ${similar.length === 1 ? "1 opÃ§Ã£o semelhante" : "2 opÃ§Ãµes semelhantes"} do catÃ¡logo:\n\n${list}\n\nAs opÃ§Ãµes acima sÃ£o imÃ³veis reais do catÃ¡logo, mas nÃ£o correspondem exatamente a todos os critÃ©rios informados.`;
+    return `Não encontrei um imóvel que atenda exatamente aos critérios. Separei ${similar.length === 1 ? "1 opção semelhante" : "2 opções semelhantes"} do catálogo:\n\n${list}\n\nAs opções acima são imóveis reais do catálogo, mas não correspondem exatamente a todos os critérios informados.`;
   }
 
   if (properties.length > 0) {
@@ -845,22 +851,22 @@ function pickFallbackAnswer(
       const list = formatPropertyList(purchaseProperties);
       const first = purchaseProperties[0];
 
-      return `Encontrei estas opções de compra dentro dos critérios informados:\n\n${list}\n\n${
+      return `Encontrei estas op��es de compra dentro dos crit�rios informados:\n\n${list}\n\n${
         purchaseProperties.length === 1
-          ? `Encontrei apenas a ${first.codigo} com esses critérios.`
-          : "Os dados disponíveis não são suficientes para escolher uma única opção; vale comparar as características e condições de cada imóvel."
-      } Quer que eu compare essas opções ou amplie a busca?`;
+          ? `Encontrei apenas a ${first.codigo} com esses crit�rios.`
+          : "Os dados dispon�veis n�o s�o suficientes para escolher uma �nica op��o; vale comparar as caracter�sticas e condi��es de cada im�vel."
+      } Quer que eu compare essas op��es ou amplie a busca?`;
     }
 
     if (finalidade === "aluguel" && rentalProperties.length > 0) {
       const list = formatPropertyList(rentalProperties);
       const first = rentalProperties[0];
 
-      return `Encontrei estas opções de aluguel dentro dos critérios informados:\n\n${list}\n\n${
+      return `Encontrei estas op��es de aluguel dentro dos crit�rios informados:\n\n${list}\n\n${
         rentalProperties.length === 1
-          ? `Encontrei apenas a ${first.codigo} com esses critérios.`
-          : "Os dados disponíveis não são suficientes para escolher uma única opção; vale comparar as características e condições de cada imóvel."
-      } Quer que eu compare essas opções ou amplie a busca?`;
+          ? `Encontrei apenas a ${first.codigo} com esses crit�rios.`
+          : "Os dados dispon�veis n�o s�o suficientes para escolher uma �nica op��o; vale comparar as caracter�sticas e condi��es de cada im�vel."
+      } Quer que eu compare essas op��es ou amplie a busca?`;
     }
 
     const sections: string[] = [];
@@ -873,7 +879,7 @@ function pickFallbackAnswer(
       sections.push(`**Aluguel**\n${formatPropertyList(rentalProperties)}`);
     }
 
-    return `Encontrei opções que atendem aos demais critérios. Como você não especificou se pretende comprar ou alugar, separei os resultados por modalidade:\n\n${sections.join("\n\n")}\n\nSe quiser, posso filtrar somente compra ou somente aluguel.`;
+    return `Encontrei op��es que atendem aos demais crit�rios. Como voc� n�o especificou se pretende comprar ou alugar, separei os resultados por modalidade:\n\n${sections.join("\n\n")}\n\nSe quiser, posso filtrar somente compra ou somente aluguel.`;
   }
 
   const requestedCriteria = [
@@ -886,9 +892,9 @@ function pickFallbackAnswer(
 
   const criteriaText = requestedCriteria.length
     ? requestedCriteria.join(", ")
-    : "os critÃ©rios informados";
+    : "os critérios informados";
 
-  return `NÃ£o encontrei imÃ³veis no catÃ¡logo que atendam a ${criteriaText}${context.catalogMatches.length === 0 ? " dentro da regiÃ£o atualmente selecionada" : ""}. Posso ampliar a busca para outros bairros ou remover algum critÃ©rio, como varanda, nÃºmero de quartos ou tipo do imÃ³vel. O que vocÃª prefere?`;
+  return `Não encontrei imóveis no catálogo que atendam a ${criteriaText}${context.catalogMatches.length === 0 ? " dentro da região atualmente selecionada" : ""}. Posso ampliar a busca para outros bairros ou remover algum critério, como varanda, número de quartos ou tipo do imóvel. O que você prefere?`;
 }
 export const appRouter = router({
   system: systemRouter,
@@ -896,8 +902,8 @@ export const appRouter = router({
     me: publicProcedure.query(opts => (opts.ctx.user ? publicUser(opts.ctx.user) : null)),
     register: publicProcedure
       .input(z.object({
-        name: z.string().trim().min(2, "Informe seu nome completo (mÃ­nimo de 2 caracteres)"),
-        email: z.string().trim().email("Informe um email vÃ¡lido"),
+        name: z.string().trim().min(2, "Informe seu nome completo (mínimo de 2 caracteres)"),
+        email: z.string().trim().email("Informe um email válido"),
         password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
       }))
       .mutation(async ({ input, ctx }) => {
@@ -907,42 +913,111 @@ export const appRouter = router({
           ctx.res.cookie(LOCAL_SESSION_COOKIE, token, localCookieOptions(ctx.req));
           return publicUser(user);
         } catch (error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "NÃ£o foi possÃ­vel criar a conta" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível criar a conta" });
         }
       }),
     login: publicProcedure
-      .input(z.object({ email: z.string().trim().email("Informe um email vÃ¡lido"), password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres") }))
+      .input(z.object({ email: z.string().trim().email("Informe um email válido"), password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres") }))
       .mutation(async ({ input, ctx }) => {
         const user = await verifyLocalCredentials(input.email, input.password);
-        if (!user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email ou senha invÃ¡lidos" });
+        if (!user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email ou senha inválidos" });
         const token = await createLocalSession(user.id);
         ctx.res.cookie(LOCAL_SESSION_COOKIE, token, localCookieOptions(ctx.req));
         return publicUser(user);
       }),
-    updateProfile: protectedProcedure
+       updateProfile: protectedProcedure
       .input(z.object({
-        name: z.string().trim().min(2, "Informe seu nome completo (mÃ­nimo de 2 caracteres)").optional(),
-        email: z.string().trim().email("Informe um email vÃ¡lido").optional(),
+        name: z.string().trim().min(2, "Informe seu nome completo (m�nimo de 2 caracteres)").optional(),
+        email: z.string().trim().email("Informe um email v�lido").optional(),
+        phone: z.string().trim().max(30, "Telefone muito longo").optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         try {
           return publicUser(await updateUserProfile(ctx.user.id, input));
         } catch (error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "NÃ£o foi possÃ­vel atualizar o perfil" });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              error instanceof Error
+                ? error.message
+                : "N�o foi poss�vel atualizar o perfil",
+          });
         }
       }),
+
+    getPreferences: protectedProcedure.query(async ({ ctx }) => {
+      return getUserPreferences(ctx.user.id);
+    }),
+
+    updatePreferences: protectedProcedure
+      .input(
+        z.object({
+          theme: z.enum(["light", "dark"]),
+          emailNotifications: z.boolean(),
+          propertyAlerts: z.boolean(),
+          deviceNotifications: z.boolean(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return updateUserPreferences(ctx.user.id, input);
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       void deleteLocalSession(ctx.req.headers.cookie);
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+
+      ctx.res.clearCookie(COOKIE_NAME, {
+        ...cookieOptions,
+        maxAge: -1,
+      });
+
       if (ctx.req.headers.cookie?.includes(`${LOCAL_SESSION_COOKIE}=`)) {
-        ctx.res.clearCookie(LOCAL_SESSION_COOKIE, { ...cookieOptions, maxAge: -1 });
+        ctx.res.clearCookie(LOCAL_SESSION_COOKIE, {
+          ...cookieOptions,
+          maxAge: -1,
+        });
       }
+
       return { success: true } as const;
     }),
   }),
   dashboard: router({
     summary: publicProcedure.query(() => getDashboardData()),
+  }),
+  favorites: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return listFavoritesForUser(ctx.user.id);
+    }),
+
+    check: protectedProcedure
+      .input(
+        z.object({
+          imovelId: z.number().int().positive(),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        return isPropertyFavorited(ctx.user.id, input.imovelId);
+      }),
+
+    add: protectedProcedure
+      .input(
+        z.object({
+          imovelId: z.number().int().positive(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return addFavorite(ctx.user.id, input.imovelId);
+      }),
+
+    remove: protectedProcedure
+      .input(
+        z.object({
+          imovelId: z.number().int().positive(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return removeFavorite(ctx.user.id, input.imovelId);
+      }),
   }),
   property: router({
     list: publicProcedure
@@ -969,7 +1044,7 @@ export const appRouter = router({
       .input(z.object({
         tipo: z.enum(["Apartamento", "Casa", "Sobrado", "Terreno", "Cobertura"]),
         bairro: z.string().min(2),
-        cidade: z.string().default("SÃ£o Paulo"),
+        cidade: z.string().default("São Paulo"),
         quartos: z.number().int().min(0).default(0),
         banheiros: z.number().int().min(0).default(0),
         vagas: z.number().int().min(0).default(0),
@@ -1042,7 +1117,7 @@ export const appRouter = router({
         try {
           return await updatePropertyForUser(ctx.user.id, imovelId, patch);
         } catch (error) {
-          throw new TRPCError({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "NÃ£o foi possÃ­vel atualizar o imÃ³vel" });
+          throw new TRPCError({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "Não foi possível atualizar o imóvel" });
         }
       }),
     remove: protectedProcedure
@@ -1051,7 +1126,7 @@ export const appRouter = router({
         try {
           return await deletePropertyForUser(ctx.user.id, input.imovelId);
         } catch (error) {
-          throw new TRPCError({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "NÃ£o foi possÃ­vel excluir o imÃ³vel" });
+          throw new TRPCError({ code: "NOT_FOUND", message: error instanceof Error ? error.message : "Não foi possível excluir o imóvel" });
         }
       }),
     generateCopy: protectedProcedure
@@ -1082,7 +1157,7 @@ export const appRouter = router({
         const response = await invokeAgentLLM({
           model: "Qwen/Qwen3.8-27B",
           messages: [
-            { role: "system", content: `${agentSystemPrompt}\nModo atual: PARSER_BUSCA. Extraia finalidade (compra ou aluguel), tipo, quartos, vagas, aceita_pets, varanda, ensolarado, cidade, bairro, valor_min, valor_max e diferenciais de uma frase de busca. "cidade" â€” o municÃ­pio (ex.: Montes Claros, SÃ£o Paulo); "bairro" â€” o bairro/regiÃ£oo dentro da cidade, quando informado. "valor_min" e "valor_max" descrevem uma faixa de preÃ§o quando a pessoa disser algo como "entre X e Y"; se for apenas um teto ("atÃ© X"), preencha sÃ³ valor_max; se for um piso ("a partir de X"), preencha sÃ³ valor_min.` },
+            { role: "system", content: `${agentSystemPrompt}\nModo atual: PARSER_BUSCA. Extraia finalidade (compra ou aluguel), tipo, quartos, vagas, aceita_pets, varanda, ensolarado, cidade, bairro, valor_min, valor_max e diferenciais de uma frase de busca. "cidade" — o município (ex.: Montes Claros, São Paulo); "bairro" — o bairro/regiãoo dentro da cidade, quando informado. "valor_min" e "valor_max" descrevem uma faixa de preço quando a pessoa disser algo como "entre X e Y"; se for apenas um teto ("até X"), preencha só valor_max; se for um piso ("a partir de X"), preencha só valor_min.` },
             { role: "user", content: input.text },
           ],
           responseFormat: { type: "json_schema", json_schema: { name: "imobai_search", strict: true, schema: searchSchema } },
@@ -1143,8 +1218,8 @@ export const appRouter = router({
         const fallback = {
           preco_sugerido_venda: suggestedSale,
           preco_sugerido_aluguel: suggestedRent,
-          justificativa: `A referÃªncia considera ${similar.length || 1} imÃ³vel(is) de ${input.bairro}, mÃ©dia de R$ ${Math.round(avgM2).toLocaleString("pt-BR")}/mÂ² e um ajuste de ${(premium * 100).toFixed(1)}% pelos diferenciais informados.`,
-          faixa_recomendada: `R$ ${Math.round(suggestedSale * 0.95).toLocaleString("pt-BR")} â€” R$ ${Math.round(suggestedSale * 1.05).toLocaleString("pt-BR")}`,
+          justificativa: `A referência considera ${similar.length || 1} imóvel(is) de ${input.bairro}, média de R$ ${Math.round(avgM2).toLocaleString("pt-BR")}/m² e um ajuste de ${(premium * 100).toFixed(1)}% pelos diferenciais informados.`,
+          faixa_recomendada: `R$ ${Math.round(suggestedSale * 0.95).toLocaleString("pt-BR")} — R$ ${Math.round(suggestedSale * 1.05).toLocaleString("pt-BR")}`,
           media_m2: Math.round(avgM2),
           similares: similar.length,
         };
@@ -1152,7 +1227,7 @@ export const appRouter = router({
           const response = await invokeAgentLLM({
             model: "Qwen/Qwen3.8-27B",
             messages: [
-              { role: "system", content: `${agentSystemPrompt}\nModo atual: SUGESTAO_PRECO. Use a mÃ©dia por mÂ² dos imÃ³veis similares e explique os ajustes de maneira transparente.` },
+              { role: "system", content: `${agentSystemPrompt}\nModo atual: SUGESTAO_PRECO. Use a média por m² dos imóveis similares e explique os ajustes de maneira transparente.` },
               { role: "user", content: JSON.stringify({ imovel: input, similares: similar.map(item => ({ bairro: item.bairro, area_m2: item.areaM2, valor_venda: item.valorVenda, tipo: item.tipo })) }) },
             ],
             responseFormat: {
@@ -1187,7 +1262,7 @@ export const appRouter = router({
       .input(z.object({ imovelId: z.number().int().positive().optional(), proprietarioId: z.number().int().positive() }))
       .mutation(async ({ input, ctx }) => {
         if (input.proprietarioId === ctx.user.id) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "VocÃª nÃ£o pode iniciar uma conversa consigo mesmo" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Você não pode iniciar uma conversa consigo mesmo" });
         }
         return createConversation({ ...input, compradorId: ctx.user.id });
       }),
@@ -1256,7 +1331,7 @@ export const appRouter = router({
               .slice(0, 10)
               .map(property => summarizePropertyForAi(property))
               .join("\n")
-          : "Nenhum imÃ³vel prÃ³prio cadastrado ainda.";
+          : "Nenhum imóvel próprio cadastrado ainda.";
 
         const similarCatalogContext = similarMatches.length
           ? similarMatches
@@ -1270,14 +1345,14 @@ export const appRouter = router({
               .slice(0, 6)
               .map(property => summarizePropertyForAi(property))
               .join("\n")
-          : "Nenhum imÃ³vel do catÃ¡logo bate com os filtros atuais da conversa.";
+          : "Nenhum imóvel do catálogo bate com os filtros atuais da conversa.";
 
         const marketContext = [
           `imoveis_ativos: ${market.totalActive}`,
           `preco_medio_geral: R$ ${Math.round(market.avgPrice).toLocaleString("pt-BR")}`,
           `preco_medio_m2_por_bairro: ${market.neighborhoods
             .slice(0, 5)
-            .map(item => `${item.bairro} R$ ${Math.round(item.priceM2).toLocaleString("pt-BR")}/mÂ²`)
+            .map(item => `${item.bairro} R$ ${Math.round(item.priceM2).toLocaleString("pt-BR")}/m²`)
             .join(", ") || "sem dados"}`,
         ].join("\n");
 
@@ -1352,7 +1427,7 @@ function parseBrazilianNumber(value: string): number | undefined {
   } else if (raw.includes(".")) {
     const parts = raw.split(".");
 
-    // 1.000 ou 1.000.000 representam milhares no padrÃ£o brasileiro.
+    // 1.000 ou 1.000.000 representam milhares no padrão brasileiro.
     if (parts.slice(1).every(part => part.length === 3)) {
       number = Number(parts.join(""));
     } else {
@@ -1389,12 +1464,12 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     .replace(/\s+/g, " ")
     .trim();
 
-  // 1. Imóvel específico pelo código.
+  // 1. Im�vel espec�fico pelo c�digo.
   if (/\bimb-[a-z0-9]+\b/i.test(normalized)) {
     return "imovel_especifico";
   }
 
-  // 2. Mercado imobiliário / estatísticas.
+  // 2. Mercado imobili�rio / estat�sticas.
   if (
     /\b(preco medio|valor medio|media de preco|media dos precos|preco por m2|valor por m2|metro quadrado|mercado imobiliario|mercado de imoveis|valorizacao|valorizacao imobiliaria)\b/i.test(
       normalized,
@@ -1403,7 +1478,7 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "mercado";
   }
 
-  // 3. Opinião / avaliação subjetiva.
+  // 3. Opini�o / avalia��o subjetiva.
   if (
     /\b(o que voce acha|o que acha|na sua opiniao|qual sua opiniao|qual a sua opiniao|voce acha|acha que|vale a pena|e bom|e ruim|seria bom|seria ruim|recomenda|recomendaria|melhor para morar|bom para morar|ruim para morar|melhor bairro|qual bairro e melhor)\b/i.test(
       normalized,
@@ -1412,16 +1487,16 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "opiniao";
   }
 
-  // 4. Comparação explícita.
+  // 4. Compara��o expl�cita.
   if (
-    /\b(compare|comparar|comparacao|comparando|qual e melhor|qual dos dois|entre .* e .*|diferen(c|ç)a entre)\b/i.test(
+    /\b(compare|comparar|comparacao|comparando|qual e melhor|qual dos dois|entre .* e .*|diferen(c|�)a entre)\b/i.test(
       normalized,
     )
   ) {
     return "comparacao";
   }
 
-  // 5. Busca explícita de imóvel.
+  // 5. Busca expl�cita de im�vel.
   if (
     /\b(quero|procuro|procurando|busco|buscar|encontrar|encontre|tem|tenho interesse|gostaria de|preciso de|me mostre|mostre|encontre|disponivel|disponiveis)\b/i.test(
       normalized,
@@ -1433,7 +1508,7 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "busca_imovel";
   }
 
-  // 6. Verbos claros de compra/aluguel também caracterizam busca.
+  // 6. Verbos claros de compra/aluguel tamb�m caracterizam busca.
   if (
     /\b(comprar|compra|compraria|alugar|aluguel|alugaria|vender|venda|locar|locacao)\b/i.test(
       normalized,
@@ -1445,7 +1520,7 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "busca_imovel";
   }
 
-  // 7. Perguntas sobre características de bairros/localidades.
+  // 7. Perguntas sobre caracter�sticas de bairros/localidades.
   if (
     /\b(como e|como sao|como eh|caracteristicas|perfil|localizacao|regiao|bairro|morar em|morar no|morar na)\b/i.test(
       normalized,
@@ -1457,7 +1532,7 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "informacao";
   }
 
-  // 8. Perguntas informativas genéricas.
+  // 8. Perguntas informativas gen�ricas.
   if (
     /^(como|qual|quais|onde|quando|por que|porque|o que|me fale|fale sobre)\b/i.test(
       normalized,
@@ -1466,7 +1541,7 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "informacao";
   }
 
-  // 9. Se houver características objetivas de imóvel, tratar como busca.
+  // 9. Se houver caracter�sticas objetivas de im�vel, tratar como busca.
   if (
     /\b\d+\s*(quartos?|dormitorios?|vagas?|garagens?)\b/i.test(normalized) ||
     /\b(varanda|sacada|terraco|pet|pets|animais|ensolarado|ensolarada)\b/i.test(
@@ -1477,7 +1552,7 @@ function classifyConciergeIntent(text: string): ConciergeIntent {
     return "busca_imovel";
   }
 
-  // Por segurança, perguntas ambíguas não devem disparar busca automática.
+  // Por seguran�a, perguntas amb�guas n�o devem disparar busca autom�tica.
   return "informacao";
 }
 function extractNaturalPropertyFilters(text: string) {
@@ -1504,12 +1579,12 @@ bairro?: string;
     "Centro",
     "Ibituruna",
     "Todos os Santos",
-    "Maracanã",
+    "Maracan�",
     "Vila Guilhermina",
-    "São José",
-    "Independência",
+    "S�o Jos�",
+    "Independ�ncia",
     "Jardim Panorama",
-    "Cândida Câmara",
+    "C�ndida C�mara",
   ];
 
   const normalizedNeighborhoods = knownNeighborhoods.map(bairro => ({
@@ -1594,7 +1669,7 @@ bairro?: string;
   }
 
   const maxPatterns = [
-    /(?:ate|atÃ©|no maximo de?|mÃ¡ximo de?|por no maximo|por no mÃ¡ximo|menos de|menor que)\s*(?:r\$\s*)?([\d.,]+\s*(?:milhao|milhÃµes?|mil|mi|k)?)/i,
+    /(?:ate|até|no maximo de?|máximo de?|por no maximo|por no máximo|menos de|menor que)\s*(?:r\$\s*)?([\d.,]+\s*(?:milhao|milhões?|mil|mi|k)?)/i,
   ];
 
   for (const pattern of maxPatterns) {
@@ -1609,7 +1684,7 @@ bairro?: string;
   }
 
   const minPatterns = [
-    /(?:a partir de|acima de|mais de|maior que|minimo de|mÃ­nimo de)\s*(?:r\$\s*)?([\d.,]+\s*(?:milhao|milhÃµes?|mil|mi|k)?)/i,
+    /(?:a partir de|acima de|mais de|maior que|minimo de|mínimo de)\s*(?:r\$\s*)?([\d.,]+\s*(?:milhao|milhões?|mil|mi|k)?)/i,
   ];
 
   for (const pattern of minPatterns) {
@@ -1637,6 +1712,12 @@ function mergeNaturalPropertyContext(
     ...extracted,
   };
 }
+
+
+
+
+
+
 
 
 

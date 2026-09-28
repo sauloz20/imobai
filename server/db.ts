@@ -1,4 +1,4 @@
-﻿import { and, asc, count, eq, gt, gte, inArray, lte, or } from "drizzle-orm";
+import { and, asc, count, eq, gt, gte, inArray, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
@@ -7,6 +7,8 @@ import { nanoid } from "nanoid";
 import { ENV } from "./_core/env";
 import {
   chatsIa,
+  userPreferences,
+  favorites,
   conversas,
   historicoBuscas,
   imoveis,
@@ -54,7 +56,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2048",
     tipo: "Apartamento",
     bairro: "Pinheiros",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 3,
     banheiros: 2,
     vagas: 2,
@@ -65,7 +67,7 @@ const demoProperties: DemoProperty[] = [
     valorVenda: "1180000.00",
     valorAluguel: "7400.00",
     descricaoTecnica: "Planta inteligente, varanda integrada e marcenaria planejada.",
-    descricaoIa: "Um apartamento luminoso em Pinheiros para viver a cidade com mais espaÃ§o e leveza.",
+    descricaoIa: "Um apartamento luminoso em Pinheiros para viver a cidade com mais espaço e leveza.",
     tituloAnuncio: "Luz natural e varanda generosa em Pinheiros",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-01_f5822bf0.jpg",
@@ -77,7 +79,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-1972",
     tipo: "Cobertura",
     bairro: "Vila Madalena",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 4,
     banheiros: 4,
     vagas: 3,
@@ -87,8 +89,8 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "2480000.00",
     valorAluguel: "14500.00",
-    descricaoTecnica: "Cobertura duplex com terraÃ§o, churrasqueira e vista aberta.",
-    descricaoIa: "Seu refÃºgio urbano com terraÃ§o ensolarado, ambientes amplos e vista para o skyline.",
+    descricaoTecnica: "Cobertura duplex com terraço, churrasqueira e vista aberta.",
+    descricaoIa: "Seu refúgio urbano com terraço ensolarado, ambientes amplos e vista para o skyline.",
     tituloAnuncio: "Cobertura duplex com vista aberta na Vila Madalena",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-02_ac324e1e.jpg",
@@ -100,7 +102,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2110",
     tipo: "Apartamento",
     bairro: "Moema",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 2,
     banheiros: 2,
     vagas: 1,
@@ -110,7 +112,7 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "890000.00",
     valorAluguel: "5600.00",
-    descricaoTecnica: "PrÃ³ximo ao parque, com varanda e iluminaÃ§Ã£o cruzada.",
+    descricaoTecnica: "Próximo ao parque, com varanda e iluminação cruzada.",
     descricaoIa: "A praticidade de Moema em uma planta acolhedora, com luz natural em todos os ambientes.",
     tituloAnuncio: "Apartamento iluminado a poucos minutos do parque",
     status: "Disponivel",
@@ -123,7 +125,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2016",
     tipo: "Casa",
     bairro: "Alto de Pinheiros",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 4,
     banheiros: 4,
     vagas: 3,
@@ -133,8 +135,8 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "3250000.00",
     valorAluguel: "18200.00",
-    descricaoTecnica: "Casa tÃ©rrea com jardim, home office e Ã¡rea gourmet.",
-    descricaoIa: "EspaÃ§oo, verde e privacidade para uma rotina com mais tempo de qualidade.",
+    descricaoTecnica: "Casa térrea com jardim, home office e área gourmet.",
+    descricaoIa: "Espaçoo, verde e privacidade para uma rotina com mais tempo de qualidade.",
     tituloAnuncio: "Casa com jardim e arquitetura acolhedora no Alto de Pinheiros",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-01_f5822bf0.jpg",
@@ -146,7 +148,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2093",
     tipo: "Apartamento",
     bairro: "Itaim Bibi",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 3,
     banheiros: 3,
     vagas: 2,
@@ -156,9 +158,9 @@ const demoProperties: DemoProperty[] = [
     ensolarado: false,
     valorVenda: "1670000.00",
     valorAluguel: "9900.00",
-    descricaoTecnica: "CondomÃ­nio completo, sala ampla e varanda gourmet.",
-    descricaoIa: "Entre restaurantes e escritÃ³rios, um endereÃ§o que simplifica seus dias.",
-    tituloAnuncio: "Varanda gourmet e localizaÃ§Ã£o premium no Itaim",
+    descricaoTecnica: "Condomínio completo, sala ampla e varanda gourmet.",
+    descricaoIa: "Entre restaurantes e escritórios, um endereço que simplifica seus dias.",
+    tituloAnuncio: "Varanda gourmet e localização premium no Itaim",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-02_ac324e1e.jpg",
     dataCadastro: new Date("2026-07-28T12:00:00Z"),
@@ -168,8 +170,8 @@ const demoProperties: DemoProperty[] = [
     ownerId: null,
     codigo: "IMB-1884",
     tipo: "Sobrado",
-    bairro: "SaÃºde",
-    cidade: "SÃ£o Paulo",
+    bairro: "Saúde",
+    cidade: "São Paulo",
     quartos: 3,
     banheiros: 2,
     vagas: 2,
@@ -180,8 +182,8 @@ const demoProperties: DemoProperty[] = [
     valorVenda: "1120000.00",
     valorAluguel: "6300.00",
     descricaoTecnica: "Sobrado reformado, quintal e duas vagas cobertas.",
-    descricaoIa: "Uma casa pronta para receber, com quintal para pets e uma vizinhanÃ§a tranquila.",
-    tituloAnuncio: "Sobrado reformado com quintal na SaÃºde",
+    descricaoIa: "Uma casa pronta para receber, com quintal para pets e uma vizinhança tranquila.",
+    tituloAnuncio: "Sobrado reformado com quintal na Saúde",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-03_c1989a3b.jpg",
     dataCadastro: new Date("2026-07-18T12:00:00Z"),
@@ -192,7 +194,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-2041",
     tipo: "Apartamento",
     bairro: "Perdizes",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 3,
     banheiros: 2,
     vagas: 2,
@@ -202,7 +204,7 @@ const demoProperties: DemoProperty[] = [
     ensolarado: true,
     valorVenda: "1260000.00",
     valorAluguel: "7600.00",
-    descricaoTecnica: "Andar alto, varanda e condomÃ­nio com lazer completo.",
+    descricaoTecnica: "Andar alto, varanda e condomínio com lazer completo.",
     descricaoIa: "Conforto e praticidade em um bairro que equilibra tranquilidade e mobilidade.",
     tituloAnuncio: "Andar alto com varanda e lazer completo em Perdizes",
     status: "Disponivel",
@@ -215,7 +217,7 @@ const demoProperties: DemoProperty[] = [
     codigo: "IMB-1999",
     tipo: "Cobertura",
     bairro: "Jardins",
-    cidade: "SÃ£o Paulo",
+    cidade: "São Paulo",
     quartos: 3,
     banheiros: 3,
     vagas: 2,
@@ -226,7 +228,7 @@ const demoProperties: DemoProperty[] = [
     valorVenda: "2790000.00",
     valorAluguel: "15800.00",
     descricaoTecnica: "Cobertura com rooftop privativo e acabamentos sofisticados.",
-    descricaoIa: "Uma cobertura autoral para quem busca design, privacidade e a melhor versÃ£o dos Jardins.",
+    descricaoIa: "Uma cobertura autoral para quem busca design, privacidade e a melhor versão dos Jardins.",
     tituloAnuncio: "Rooftop privativo e design autoral nos Jardins",
     status: "Disponivel",
     imagemUrl: "/manus-storage/apto-02_ac324e1e.jpg",
@@ -319,15 +321,15 @@ export async function listProperties(
 
   if (!db) {
     if (isDemoMode) return filterDemoProperties(filters);
-    throw new Error("Banco de dados indisponÃ­vel");
+    throw new Error("Banco de dados indisponível");
   }
 
   try {
     const conditions = [eq(imoveis.status, "Disponivel")];
 
-    // Finalidade nÃ£o Ã© uma coluna: um imÃ³vel "estÃ¡ para" venda se tem valor de venda,
+    // Finalidade não é uma coluna: um imóvel "está para" venda se tem valor de venda,
     // e para aluguel se tem valor de aluguel. Sem isso, "quero alugar" retornaria
-    // tambÃ©m imÃ³veis que sÃ³ tÃªm preÃ§o de venda.
+    // também imóveis que só têm preço de venda.
     if (filters.finalidade === "compra") {
       conditions.push(gt(imoveis.valorVenda, "0"));
     }
@@ -495,12 +497,12 @@ export async function getDashboardData() {
     } catch {
       if (!isDemoMode) {
         throw new Error(
-          "NÃ£o foi possÃ­vel carregar as mÃ©tricas do dashboard"
+          "Não foi possível carregar as métricas do dashboard"
         );
       }
     }
   } else if (!isDemoMode) {
-    throw new Error("Banco de dados indisponÃ­vel");
+    throw new Error("Banco de dados indisponível");
   }
 
   const active = properties.filter(
@@ -622,7 +624,7 @@ function hashSessionToken(token: string) {
 export async function getUserByEmail(email: string) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indisponível");
 
   const result = await db
     .select()
@@ -640,14 +642,14 @@ export async function createLocalUser(input: {
 }) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indisponível");
 
   const email = input.email.trim().toLowerCase();
 
   const existing = await getUserByEmail(email);
 
   if (existing) {
-    throw new Error("Este email jÃ¡ estÃ¡ cadastrado");
+    throw new Error("Este email já está cadastrado");
   }
 
   const openId = `local_${nanoid(24)}`;
@@ -663,7 +665,7 @@ export async function createLocalUser(input: {
   const userId = createdUser?.id;
 
   if (!userId) {
-    throw new Error("NÃ£o foi possÃ­vel criar a conta");
+    throw new Error("Não foi possível criar a conta");
   }
 
   const user = await db
@@ -673,7 +675,7 @@ export async function createLocalUser(input: {
     .limit(1);
 
   if (!user[0]) {
-    throw new Error("NÃ£o foi possÃ­vel criar a conta");
+    throw new Error("Não foi possível criar a conta");
   }
 
   return user[0];
@@ -681,16 +683,17 @@ export async function createLocalUser(input: {
 
 export async function updateUserProfile(
   userId: number,
-  input: { name?: string; email?: string }
+  input: { name?: string; email?: string; phone?: string }
 ) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indispon�vel");
 
   if (input.email) {
     const existing = await getUserByEmail(input.email);
+
     if (existing && existing.id !== userId) {
-      throw new Error("Este email jÃ¡ estÃ¡ em uso por outra conta");
+      throw new Error("Este email j� est� em uso por outra conta");
     }
   }
 
@@ -699,12 +702,66 @@ export async function updateUserProfile(
     .set({
       ...(input.name !== undefined ? { name: input.name } : {}),
       ...(input.email !== undefined ? { email: input.email } : {}),
-      updatedAt: new Date(),
+      ...(input.phone !== undefined ? { phone: input.phone } : {}),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(users.id, userId))
     .returning();
 
-  if (!updated) throw new Error("UsuÃ¡rio nÃ£o encontrado");
+  return updated;
+}
+export async function getUserPreferences(userId: number) {
+  const db = await getDb();
+
+  if (!db) throw new Error("Banco de dados indispon�vel");
+
+  const [preferences] = await db
+    .select()
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, userId))
+    .limit(1);
+
+  if (preferences) {
+    return preferences;
+  }
+
+  const [created] = await db
+    .insert(userPreferences)
+    .values({
+      userId,
+    })
+    .returning();
+
+  return created;
+}
+
+export async function updateUserPreferences(
+  userId: number,
+  input: {
+    theme?: string;
+    emailNotifications?: boolean;
+    propertyAlerts?: boolean;
+    deviceNotifications?: boolean;
+  }
+) {
+  const db = await getDb();
+
+  if (!db) throw new Error("Banco de dados indispon�vel");
+
+  const [updated] = await db
+    .insert(userPreferences)
+    .values({
+      userId,
+      ...input,
+    })
+    .onConflictDoUpdate({
+      target: userPreferences.userId,
+      set: {
+        ...input,
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    .returning();
 
   return updated;
 }
@@ -730,7 +787,7 @@ export async function verifyLocalCredentials(
 export async function createLocalSession(userId: number) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indisponível");
 
   const token = randomBytes(32).toString("hex");
 
@@ -810,7 +867,7 @@ export async function createPropertyForUser(
 ) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indisponível");
 
   const codigo = `IMB-${nanoid(7).toUpperCase()}`;
 
@@ -839,9 +896,9 @@ export async function updatePropertyForUser(
 ) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indisponível");
 
-  // A clÃ¡usula ownerId garante que sÃ³ o dono edita o imÃ³vel.
+  // A cláusula ownerId garante que só o dono edita o imóvel.
   const [updated] = await db
     .update(imoveis)
     .set(input)
@@ -849,7 +906,7 @@ export async function updatePropertyForUser(
     .returning({ id: imoveis.id });
 
   if (!updated?.id) {
-    throw new Error("ImÃ³vel nÃ£o encontrado ou sem permissÃ£o para editar");
+    throw new Error("Imóvel não encontrado ou sem permissão para editar");
   }
 
   const created = await db
@@ -864,9 +921,9 @@ export async function updatePropertyForUser(
 export async function deletePropertyForUser(userId: number, propertyId: number) {
   const db = await getDb();
 
-  if (!db) throw new Error("Banco de dados indisponÃ­vel");
+  if (!db) throw new Error("Banco de dados indisponível");
 
-  // Fotos sÃ£o removidas primeiro (para coletar os fileKeys antes do cascade).
+  // Fotos são removidas primeiro (para coletar os fileKeys antes do cascade).
   const photos = await db
     .select({ fileKey: imovelFotos.fileKey })
     .from(imovelFotos)
@@ -878,10 +935,10 @@ export async function deletePropertyForUser(userId: number, propertyId: number) 
     .returning({ id: imoveis.id });
 
   if (!deleted?.id) {
-    throw new Error("ImÃ³vel nÃ£o encontrado ou sem permissÃ£o para excluir");
+    throw new Error("Imóvel não encontrado ou sem permissão para excluir");
   }
 
-  // Com o imÃ³vel excluÃ­do (fotos tÃªm FK cascade), remove os arquivos do storage.
+  // Com o imóvel excluído (fotos têm FK cascade), remove os arquivos do storage.
   for (const photo of photos) {
     try {
       await storageRemove(photo.fileKey);
@@ -960,7 +1017,7 @@ export async function addPropertyPhotos(
   const db = await getDb();
 
   if (!db) {
-    throw new Error("Banco de dados indisponÃ­vel");
+    throw new Error("Banco de dados indisponível");
   }
 
   const property = await db
@@ -976,7 +1033,7 @@ export async function addPropertyPhotos(
 
   if (!property[0]) {
     throw new Error(
-      "ImÃ³vel nÃ£o encontrado ou sem permissÃ£o"
+      "Imóvel não encontrado ou sem permissão"
     );
   }
 
@@ -989,7 +1046,7 @@ export async function addPropertyPhotos(
 
   if (existing.length + photos.length > 20) {
     throw new Error(
-      "Cada anÃºncio pode ter no mÃ¡ximo 20 fotos"
+      "Cada anúncio pode ter no máximo 20 fotos"
     );
   }
 
@@ -1043,7 +1100,7 @@ export async function getConversation(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponÃ­vel"
+      "Banco de dados indisponível"
     );
   }
 
@@ -1104,7 +1161,7 @@ export async function createConversation(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponÃ­vel"
+      "Banco de dados indisponível"
     );
   }
 
@@ -1140,7 +1197,7 @@ export async function createConversation(
       .returning({ id: conversas.id });
 
     if (!createdConversation?.id) {
-      throw new Error("NÃ£o foi possÃ­vel criar a conversa");
+      throw new Error("Não foi possível criar a conversa");
     }
 
     const created = await db
@@ -1191,7 +1248,7 @@ export async function listMessages(
 
   if (!conversation) {
     throw new Error(
-      "Conversa nÃ£o encontrada"
+      "Conversa não encontrada"
     );
   }
 
@@ -1241,7 +1298,7 @@ export async function createMessage(
 
   if (!conversation) {
     throw new Error(
-      "Conversa nÃ£o encontrada"
+      "Conversa não encontrada"
     );
   }
 
@@ -1249,7 +1306,7 @@ export async function createMessage(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponÃ­vel"
+      "Banco de dados indisponível"
     );
   }
 
@@ -1278,7 +1335,7 @@ export async function getOrCreateAiChat(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponÃ­vel"
+      "Banco de dados indisponível"
     );
   }
 
@@ -1405,7 +1462,7 @@ export async function createAiMessage(
 
   if (!db) {
     throw new Error(
-      "Banco de dados indisponÃ­vel"
+      "Banco de dados indisponível"
     );
   }
 
@@ -1427,6 +1484,96 @@ export async function createAiMessage(
 
   return created[0];
 }
+export async function isPropertyFavorited(
+  userId: number,
+  imovelId: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível");
+
+  const [favorite] = await db
+    .select()
+    .from(favorites)
+    .where(
+      and(
+        eq(favorites.userId, userId),
+        eq(favorites.imovelId, imovelId)
+      )
+    )
+    .limit(1);
+
+  return !!favorite;
+}
+
+export async function addFavorite(
+  userId: number,
+  imovelId: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível");
+
+  const [favorite] = await db
+    .insert(favorites)
+    .values({
+      userId,
+      imovelId,
+    })
+    .onConflictDoNothing({
+      target: [favorites.userId, favorites.imovelId],
+    })
+    .returning();
+
+  return favorite ?? null;
+}
+
+export async function removeFavorite(
+  userId: number,
+  imovelId: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível");
+
+  const deleted = await db
+    .delete(favorites)
+    .where(
+      and(
+        eq(favorites.userId, userId),
+        eq(favorites.imovelId, imovelId)
+      )
+    )
+    .returning();
+
+  return deleted.length > 0;
+}
+
+export async function listFavoritesForUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível");
+
+  return db
+    .select({
+      favoriteId: favorites.id,
+      imovelId: imoveis.id,
+      codigo: imoveis.codigo,
+      tipo: imoveis.tipo,
+      bairro: imoveis.bairro,
+      cidade: imoveis.cidade,
+      quartos: imoveis.quartos,
+      banheiros: imoveis.banheiros,
+      vagas: imoveis.vagas,
+      areaM2: imoveis.areaM2,
+      valorVenda: imoveis.valorVenda,
+      valorAluguel: imoveis.valorAluguel,
+      tituloAnuncio: imoveis.tituloAnuncio,
+      imagemUrl: imoveis.imagemUrl,
+      status: imoveis.status,
+    })
+    .from(favorites)
+    .innerJoin(imoveis, eq(favorites.imovelId, imoveis.id))
+    .where(eq(favorites.userId, userId));
+}
+
+
 
 
 
