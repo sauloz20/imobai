@@ -32,7 +32,7 @@ const conversations: Conversation[] = [
     id: "concierge",
     name: "Concierge IA",
     type: "ai",
-    preview: "Seu assistente imobiliário pessoal",
+    preview: "Seu assistente imobiliario pessoal",
     time: "Agora",
     unread: 1,
   },
@@ -40,7 +40,7 @@ const conversations: Conversation[] = [
     id: "vendedor-1",
     name: "Mariana Oliveira",
     type: "seller",
-    preview: "O imóvel continua disponível para visita.",
+    preview: "O imovel continua disponivel para visita.",
     time: "10:42",
     property: "Casa com 3 quartos em Ibituruna",
     unread: 2,
@@ -68,7 +68,7 @@ const humanMessages: Record<
     {
       id: "seller-1",
       sender: "other",
-      text: "Olá! Vi que você demonstrou interesse no imóvel.",
+      text: "OlÃ¡! Vi que vocÃª demonstrou interesse no imÃ³vel.",
       time: "10:38",
     },
     {
@@ -80,7 +80,7 @@ const humanMessages: Record<
     {
       id: "seller-3",
       sender: "other",
-      text: "Claro. O imóvel continua disponível para visita.",
+      text: "Claro. O imÃ³vel continua disponÃ­vel para visita.",
       time: "10:42",
     },
   ],
@@ -96,16 +96,16 @@ const humanMessages: Record<
 
 const suggestedPrompts = [
   {
-    label: "Encontrar imóveis",
-    text: "Quero encontrar imóveis que combinem com o que estou procurando.",
+    label: "Encontrar imÃ³veis",
+    text: "Quero encontrar imÃ³veis que combinem com o que estou procurando.",
   },
   {
-    label: "Comparar opções",
-    text: "Compare as melhores opções disponíveis para mim.",
+    label: "Comparar opiniÃµes",
+    text: "Compare as melhores opiniÃµes disponiveis para mim.",
   },
   {
-    label: "Analisar preço",
-    text: "Qual faixa de preço faz sentido para esse imóvel?",
+    label: "Analisar preÃ§o",
+    text: "Qual faixa de preÃ§o faz sentido para esse imÃ³vel?",
   },
   {
     label: "Conhecer bairros",
@@ -183,7 +183,7 @@ export default function Messages() {
 
     onError: error => {
       console.error("[Concierge] Erro ao enviar mensagem:", error);
-      console.error("[Concierge] Código:", error.data?.code);
+      console.error("[Concierge] CÃ³digo:", error.data?.code);
       console.error("[Concierge] Mensagem:", error.message);
 
       setPendingAiMessages(current =>
@@ -238,7 +238,7 @@ export default function Messages() {
     console.log("[Concierge] handleSend chamado");
     console.log("[Concierge] Texto:", value);
     console.log("[Concierge] Conversa:", selectedConversation.id);
-    console.log("[Concierge] É IA:", isAiConversation);
+    console.log("[Concierge] ï¿½ IA:", isAiConversation);
     console.log(
       "[Concierge] Mutation pending:",
       sendAiMessage.isPending
@@ -251,7 +251,7 @@ export default function Messages() {
 
     if (isAiConversation) {
       if (sendAiMessage.isPending) {
-        console.warn("[Concierge] Já existe uma mensagem sendo enviada.");
+        console.warn("[Concierge] JÃ¡ existe uma mensagem sendo enviada.");
         return;
       }
 
@@ -340,7 +340,7 @@ export default function Messages() {
             <Link
               href="/"
               className="flex h-10 w-10 items-center justify-center rounded-full text-[#40536a] transition hover:bg-white/80"
-              aria-label="Voltar para o início"
+              aria-label="Voltar para o inicio"
             >
               <ArrowLeft size={19} />
             </Link>
@@ -365,7 +365,7 @@ export default function Messages() {
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center rounded-full text-[#40536a] transition hover:bg-white/80"
-            aria-label="Mais opções"
+            aria-label="Mais opiniÃµes"
           >
             <MoreHorizontal size={20} />
           </button>
@@ -388,7 +388,7 @@ export default function Messages() {
                   </h1>
 
                   <p className="mt-1 text-[11px] text-[#8090a0]">
-                    Tudo em um só lugar
+                    Tudo em um sÃ³ lugar
                   </p>
                 </div>
 
@@ -491,8 +491,8 @@ export default function Messages() {
                   <span className="h-1.5 w-1.5 rounded-full bg-[#68a77c]" />
 
                   {isAiConversation
-                    ? "Conectado ao catálogo do ImobAI"
-                    : "Conversa sobre imóvel"}
+                    ? "Conectado ao catÃ¡logo do ImobAI"
+                    : "Conversa sobre imÃ³vel"}
                 </div>
               </div>
 
@@ -506,7 +506,7 @@ export default function Messages() {
               <button
                 type="button"
                 className="flex h-9 w-9 items-center justify-center rounded-full text-[#718294] hover:bg-white/80"
-                aria-label="Mais opções da conversa"
+                aria-label="Mais opiniÃµes da conversa"
               >
                 <MoreHorizontal size={18} />
               </button>
@@ -524,13 +524,13 @@ export default function Messages() {
 
                     <div>
                       <div className="text-[11px] font-semibold text-[#233b50]">
-                        Seu assistente imobiliário pessoal
+                        Seu assistente imobiliario pessoal
                       </div>
 
                       <p className="mt-1 max-w-2xl text-[10px] leading-5 text-[#718398]">
-                        Posso interpretar sua busca, encontrar imóveis,
-                        comparar opções e analisar preços usando os dados
-                        disponíveis no ImobAI.
+                        Posso interpretar sua busca, encontrar imÃ³veis,
+                        comparar opiniÃµes e analisar preÃ§os usando os dados
+                        disponÃ­veis no ImobAI.
                       </p>
                     </div>
                   </div>
@@ -547,7 +547,7 @@ export default function Messages() {
 
                   <div className="min-w-0">
                     <div className="text-[9px] uppercase tracking-[0.12em] text-[#8a99a7]">
-                      Imóvel relacionado
+                      ImÃ³vel relacionado
                     </div>
 
                     <div className="truncate text-[11px] font-semibold text-[#30475c]">
@@ -571,64 +571,65 @@ export default function Messages() {
                     </div>
 
                     <h2 className="text-[18px] font-semibold tracking-[-0.035em] text-[#233b50]">
-                      Por onde começamos?
+                      Por onde comeÃ§amos?
                     </h2>
 
                     <p className="mt-2 max-w-md text-[11px] leading-5 text-[#8292a0]">
-                      Conte o que você procura. O Concierge consegue
-                      transformar uma descrição natural em uma busca
-                      imobiliária.
+                      Conte o que vocÃª procura. O Concierge consegue
+                      transformar uma descriÃ§Ã£o natural em uma busca
+                      imobiliÃ¡ria.
                     </p>
                   </div>
                 )}
 
               {selectedMessages.map((message, index) => {
-        const previousMessage = selectedMessages[index - 1];
-        const isSameSender = previousMessage?.sender === message.sender;
+                const previousMessage = selectedMessages[index - 1];
+                const isSameSender = previousMessage?.sender === message.sender;
 
-        return (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex",
-                    isSameSender ? "mt-[-6px]" : "mt-0",
-                    message.sender === "me"
-                      ? "justify-end"
-                      : "justify-start"
-                  )}
-                >
-                  {message.sender === "other" &&
-                    isAiConversation && (
-                      <div className="mr-2 mt-1 hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#102f50] text-[#dfbd74] sm:flex">
-                        <Sparkles size={12} />
-                      </div>
-                    )}
-
+                return (
                   <div
+                    key={message.id}
                     className={cn(
-                      "group relative max-w-[82%] rounded-[20px] px-4 py-3 text-[13px] leading-6 font-normal shadow-sm transition-all duration-200 sm:max-w-[72%]",
+                      "flex",
+                      isSameSender ? "mt-[-6px]" : "mt-0",
                       message.sender === "me"
-                        ? "rounded-br-[6px] bg-[linear-gradient(135deg,#173a5e,#214d76)] text-white shadow-[0_10px_28px_rgba(23,58,94,0.18)]"
-                        : "rounded-bl-[6px] border border-white/90 bg-white/80 text-[#30475c] shadow-[0_8px_28px_rgba(48,81,107,0.07)] backdrop-blur-xl"
+                        ? "justify-end"
+                        : "justify-start"
                     )}
                   >
-                    <div className="whitespace-pre-wrap break-words">
-                      {message.text}
-                    </div>
+                    {message.sender === "other" &&
+                      isAiConversation && (
+                        <div className="mr-2 mt-1 hidden h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#102f50] text-[#dfbd74] sm:flex">
+                          <Sparkles size={12} />
+                        </div>
+                      )}
 
                     <div
                       className={cn(
-                        "mt-1.5 flex justify-end text-[8px] leading-none",
+                        "group relative max-w-[82%] rounded-[20px] px-4 py-3 text-[13px] leading-6 font-normal shadow-sm transition-all duration-200 sm:max-w-[72%]",
                         message.sender === "me"
-                          ? "text-white/50"
-                          : "text-[#9aa7b3]"
+                          ? "rounded-br-[6px] bg-[linear-gradient(135deg,#173a5e,#214d76)] text-white shadow-[0_10px_28px_rgba(23,58,94,0.18)]"
+                          : "rounded-bl-[6px] border border-white/90 bg-white/80 text-[#30475c] shadow-[0_8px_28px_rgba(48,81,107,0.07)] backdrop-blur-xl"
                       )}
                     >
-                      {message.time}
+                      <div className="whitespace-pre-wrap break-words">
+                        {message.text}
+                      </div>
+
+                      <div
+                        className={cn(
+                          "mt-1.5 flex justify-end text-[8px] leading-none",
+                          message.sender === "me"
+                            ? "text-white/50"
+                            : "text-[#9aa7b3]"
+                        )}
+                      >
+                        {message.time}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ); })}
+                );
+              })}
 
               {sendAiMessage.isPending && isAiConversation && (
                 <div className="flex items-start gap-2">
@@ -639,7 +640,7 @@ export default function Messages() {
                   <div className="rounded-[20px] rounded-bl-md border border-white/90 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-xl">
                     <div className="flex items-center gap-2 text-[10px] text-[#7d8d9c]">
                       <Loader2 size={13} className="animate-spin" />
-                      O Concierge está analisando sua busca...
+                      O Concierge estÃ¡ analisando sua busca...
                     </div>
                   </div>
                 </div>
@@ -716,7 +717,7 @@ export default function Messages() {
                   aria-label="Enviar mensagem"
                 >
                   {isAiConversation &&
-                  sendAiMessage.isPending ? (
+                    sendAiMessage.isPending ? (
                     <Loader2 size={15} className="animate-spin" />
                   ) : (
                     <Send size={15} />
@@ -725,7 +726,7 @@ export default function Messages() {
               </div>
 
               <div className="px-1 pt-2 text-[8px] text-[#a0adb8]">
-                Enter envia · Shift + Enter cria uma nova linha
+                Enter envia e Shift + Enter cria uma nova linha
               </div>
             </form>
           </section>
