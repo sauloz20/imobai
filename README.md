@@ -24,3 +24,17 @@ pnpm dev
 ```
 
 Abra o endereço exibido no terminal. Consulte [as variáveis de exemplo](.env.example) para configurar os serviços usados por recursos como persistência e integrações externas. Para conferir os tipos, execute `pnpm check`. Para gerar a versão de produção, use `pnpm build`.
+
+## Tecnologias e estrutura
+
+O projeto combina React, TypeScript, Vite, Express, tRPC e Drizzle ORM. O backend usa o driver MySQL; veja [DATABASE_SETUP.md](DATABASE_SETUP.md) para configuração e migrações.
+
+- `client/`: interface e páginas.
+- `server/`: API, autenticação, integrações e testes.
+- `shared/`: tipos e utilitários compartilhados.
+- `drizzle/`: esquema e migrações do banco.
+- `.env.example`: nomes das variáveis para configuração local.
+
+Para executar os testes configurados, use `pnpm test`. O repositório também contém `package-lock.json`; os comandos deste README usam o pnpm e seu respectivo lockfile. Mantenha ambos até definir qual gerenciador será adotado.
+
+Antes de aplicar migrações em um banco existente, revise o destino e faça backup. As integrações externas exigem credenciais e podem ter custos ou limites de uso; nunca publique segredos nos arquivos versionados.
